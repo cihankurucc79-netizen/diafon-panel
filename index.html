@@ -3,100 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diafon Kontrol Merkezi</title>
-    <!-- jQuery Motoru kanka, CSS kullanmadan her şeyi bununla canlandıracağız -->
+    <title>Cihan Diafon Otomasyon Paneli</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 
-    <div id="admin-kutusu">
-        <h2>⚡ DIAFON CONTROL PANEL</h2>
-        <hr>
+    <div id="panel-container">
+        <h1>CİHAN DIAFON KONTROL</h1>
+        <hr class="cizgi">
 
-        <div class="satir">
-            <span class="metin">ESP8266 Modülü:</span>
-            <button id="btn-esp" class="anahtar">Yükleniyor...</button>
+        <div class="buton-satir">
+            <span class="buton-etiket">ESP8266 Modülü</span>
+            <button id="esp-buton" class="pasif">KAPALI</button>
         </div>
 
-        <div class="satir">
-            <span class="metin">Android Java Servisi:</span>
-            <button id="btn-android" class="anahtar">Yükleniyor...</button>
+        <div class="buton-satir">
+            <span class="buton-etiket">Diafon Sinyal Kesici</span>
+            <button id="diafon-buton" class="pasif">KAPALI</button>
         </div>
 
-        <hr>
-        <div id="durum-bar">
-            <strong>Durum:</strong> <span id="durum-yazi">Sistem hazır kanka.</span>
+        <div class="buton-satir">
+            <span class="buton-etiket">Otomatik Kapı Açıcı</span>
+            <button id="kapi-buton" class="pasif">KAPALI</button>
         </div>
+
+        <hr class="cizgi">
+        
+        <div id="durum-bar">Sistem hazır kanka.</div>
     </div>
 
     <script>
         $(document).ready(function() {
-    // ==========================================
-    // 🎛️ TELEGRAM AYARLARI (CİHAN DIAFON KONTROL)
-    // ==========================================
-    var botToken = "8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA";
-    var chatId = "8481437790";
+            // CSS dosyası kullanmadan sayfayı jQuery ile simsiyah ve neon yapıyoruz kanka
+            $("body").css({
+                "background-color": "#0d0d0d",
+                "color": "#ffffff",
+                "font-family": "'Courier New', Courier, monospace",
+                "display": "flex",
+                "justify-content": "center",
+                "align-items": "center",
+                "height": "100vh",
+                "margin": "0"
+            });
 
-    // Telegram API'sine arka planda istek atan ortak fonksiyonumuz
-    function telegramMesajGonder(mesaj) {
-        var url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-        
-        // jQuery GET isteği ile Telegram sunucularına sinyal fırlatıyoruz
-        $.get(url, {
-            chat_id: chatId,
-            text: mesaj
-        })
-        .done(function(response) {
-            console.log("Sinyal Telegram'a uçtu kanka:", response);
-            // Sayfanın en altındaki durum barını yeşile boyayıp onay veriyoruz
-            $("#durum-bar").text("Telegram'a işlendi!").css("color", "#00ff00");
-        })
-        .fail(function(error) {
-            console.error("Hata oluştu kanka:", error);
-            // Sinyal gitmezse durum barını kırmızı yapıp uyarıyoruz
-            $("#durum-bar").text("Hata: Sinyal gitmedi!").css("color", "#ff0000");
+            $("#panel-container").css({
+                "background-color": "#1a1a1a",
+                "padding": "30px",
+                "border-radius": "15px",
+                "box-shadow": "0 0 25px #00ff00",
+                "width": "350px",
+                "text-align": "center",
+                "border": "1px solid #333"
+            });
+
+            $("h1").css({
+                "color": "#00ff00",
+                "font-size": "22px",
+                "letter-spacing": "2px",
+                "margin-bottom": "20px",
+                "text-shadow": "0 0 10px #00ff00"
+            });
+
+            $(".cizgi").css({
+                "border": "0",
+                "height": "1px",
+                "background": "#333",
+                "margin": "20px 0"
+            });
+
+            $(".buton-satir").css({
+                "display": "flex",
+                "justify-content": "between",
+                "align-items": "center",
+                "margin": "15px 0",
+                "justify-content": "space-between"
+            });
+
+            $(".buton-etiket").css({
+                "font-size": "14px",
+                "color": "#cccccc",
+                "font-weight": "bold"
+            });
+
+            // Butonların ortak ilk tasarımları
+            $("button").css({
+                "width": "100px",
+                "padding": "10px",
+                "font-size": "14px",
+                "font-weight": "bold",
+                "border": "none",
+                "border-radius": "8px",
+                "cursor": "pointer",
+                "transition": "all 0.3s ease",
+                "font-family": "'Courier New', Courier, monospace"
+            });
+
+            // KAPALI (Pasif) butonların kırmızı neon stili
+            function pasifStilYap(element) {
+                $(element).css({
+                    "background-color": "#ff0033",
+                    "color": "#ffffff",
+                    "box-shadow": "0 0 10px #ff0033"
+                });
+            }
+
+            // AÇIK (Aktif) butonların yeşil neon stili
+            function aktifStilYap(element) {
+                $(element).css({
+                    "background-color": "#00ff00",
+                    "color": "#000000",
+                    "box-shadow": "0 0 15px #00ff00"
+                });
+            }
+
+            // Sayfa ilk açıldığında tüm butonları kırmızı (KAPALI) yapıyoruz
+            pasifStilYap("button");
+
+            $("#durum-bar").css({
+                "font-size": "13px",
+                "color": "#888888",
+                "margin-top": "15px",
+                "font-weight": "bold"
+            });
+
+
+            // ==========================================
+            // 🎛️ TELEGRAM AYARLARI (CİHAN DIAFON KONTROL)
+            // ==========================================
+            var botToken = "8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA";
+            var chatId = "8481437790";
+
+            function telegramMesajGonder(mesaj) {
+                var url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                
+                $("#durum-bar").text("Sinyal gönderiliyor...").css("color", "#ffff00");
+
+                $.get(url, {
+                    chat_id: chatId,
+                    text: mesaj
+                })
+                .done(function(response) {
+                    console.log("Telegram'a uçtu kanka:", response);
+                    $("#durum-bar").text("Telegram'a işlendi!").css("color", "#00ff00");
+                })
+                .fail(function(error) {
+                    console.error("Hata oldu kanka:", error);
+                    $("#durum-bar").text("Hata: Sinyal gitmedi!").css("color", "#ff0000");
+                });
+            }
+
+            // ==========================================
+            // ⚡ BUTON TIKLAMA OLAYLARI VE TELEGRAM TETİKLEME
+            // ==========================================
+
+            // 1. ESP8266 Butonu
+            $("#esp-buton").click(function() {
+                if ($(this).hasClass("aktif")) {
+                    $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
+                    pasifStilYap(this);
+                    telegramMesajGonder("Mesa komut:ESP pasif");
+                } else {
+                    $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
+                    aktifStilYap(this);
+                    telegramMesajGonder("Mesa komut:ESP aktif");
+                }
+            });
+
+            // 2. Diafon Butonu
+            $("#diafon-buton").click(function() {
+                if ($(this).hasClass("aktif")) {
+                    $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
+                    pasifStilYap(this);
+                    telegramMesajGonder("Mesa komut:Diafon pasif");
+                } else {
+                    $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
+                    aktifStilYap(this);
+                    telegramMesajGonder("Mesa komut:Diafon aktif");
+                }
+            });
+
+            // 3. Kapı Butonu
+            $("#kapi-buton").click(function() {
+                if ($(this).hasClass("aktif")) {
+                    $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
+                    pasifStilYap(this);
+                    telegramMesajGonder("Mesa komut:Kapi pasif");
+                } else {
+                    $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
+                    aktifStilYap(this);
+                    telegramMesajGonder("Mesa komut:Kapi aktif");
+                }
+            });
         });
-    }
-
-    // ==========================================
-    // ⚡ BUTON TETİKLEMELERİ VE DİNAMİK STİLLER
-    // ==========================================
-
-    // 1. ESP8266 Modülü Kontrol Butonu
-    $("#esp-buton").click(function() {
-        if ($(this).hasClass("aktif")) {
-            // Buton AÇIK'tı, şimdi KAPALI yapıyoruz
-            $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
-            telegramMesajGonder("Mesa komut:ESP pasif");
-        } else {
-            // Buton KAPALI'ydı, şimdi AÇIK yapıyoruz
-            $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
-            telegramMesajGonder("Mesa komut:ESP aktif");
-        }
-    });
-
-    // 2. Diafon Sinyal Kesici Kontrol Butonu
-    $("#diafon-buton").click(function() {
-        if ($(this).hasClass("aktif")) {
-            $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
-            telegramMesajGonder("Mesa komut:Diafon pasif");
-        } else {
-            $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
-            telegramMesajGonder("Mesa komut:Diafon aktif");
-        }
-    });
-
-    // 3. Otomatik Kapı Açıcı Kontrol Butonu
-    $("#kapi-buton").click(function() {
-        if ($(this).hasClass("aktif")) {
-            $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
-            telegramMesajGonder("Mesa komut:Kapi pasif");
-        } else {
-            $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
-            telegramMesajGonder("Mesa komut:Kapi aktif");
-        }
-    });
-});
     </script>
 </body>
 </html>
