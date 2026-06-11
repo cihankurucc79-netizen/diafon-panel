@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diafon Kontrol Merkezi</title>
+    <!-- jQuery Motoru kanka, CSS kullanmadan her şeyi bununla canlandıracağız -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    <div id="admin-kutusu">
+        <h2>⚡ DIAFON CONTROL PANEL</h2>
+        <hr>
+
+        <div class="satir">
+            <span class="metin">ESP8266 Modülü:</span>
+            <button id="btn-esp" class="anahtar">Yükleniyor...</button>
+        </div>
+
+        <div class="satir">
+            <span class="metin">Android Java Servisi:</span>
+            <button id="btn-android" class="anahtar">Yükleniyor...</button>
+        </div>
+
+        <hr>
+        <div id="durum-bar">
+            <strong>Durum:</strong> <span id="durum-yazi">Sistem hazır kanka.</span>
+        </div>
+    </div>
+
+    <script>
+        // KANKA BOTFATHER'DAN ALDIĞIN TOKEN'I BURAYA YAZDIK
+        const BOT_TOKEN = "8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA";
+        // Buraya da birazdan oluşturacağımız grubun ID'sini yazacağız, şimdilik dursun
+        const CHAT_ID = "-1002416245123"; 
+
+        // jQuery ile dynamic styling yapıyoruz, statik CSS'e ölüm kanka!
+        $("body").css({
+            "background-color": "#0f0f11", "color": "#fff", "font-family": "sans-serif",
+            "display": "flex", "justify-content": "center", "align-items": "center", "height": "100vh", "margin": "0"
+        });
+        $("#admin-kutusu").css({
+            "background-color": "#16161a", "padding": "25px", "border-radius": "12px",
+            "box-shadow": "0 8px 24px rgba(0,0,0,0.5)", "width": "300px", "border": "1px solid #24252d"
+        });
+        $(".satir").css({ "display": "flex", "justify-content": "space-between", "align-items": "center", "margin-bottom": "15px" });
+        $(".metin").css({ "font-size": "15px", "font-weight": "bold" });
+        $(".anahtar").css({ "padding": "8px 14px", "border-radius": "6px", "border": "none", "cursor": "pointer", "font-weight": "bold" });
+
+        // İlk durumlar varsayılan AKTIF
+        let durum = { esp: "AKTIF", android: "AKTIF" };
+
+        function arayuzGuncelle() {
+            if(durum.esp === "AKTIF") {
+                $("#btn-esp").text("AÇIK").css({"background-color": "#2ecc71", "color": "#fff"});
+            } else {
+                $("#btn-esp").text("KAPALI").css({"background-color": "#e74c3c", "color": "#fff"});
+            }
+            if(durum.android === "AKTIF") {
+                $("#btn-android").text("AÇIK").css({"background-color": "#2ecc71", "color": "#fff"});
+            } else {
+                $("#btn-android").text("KAPALI").css({"background-color": "#e74c3c", "color": "#fff"});
+            }
+        }
+        arayuzGuncelle();
+
+        // Doğrudan Telegram'a emir üfleyen AJAX fonksiyonu
+        function telegramaKomutAt(metin) {
+            $("#durum-yazi").text("Gönderiliyor...").css("color", "#f1c40f");
+            $.ajax({
+                url: `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+                method: "POST",
+                data: { chat_id: CHAT_ID, text: metin },
+                success: function() { $("#durum-yazi").text("Telegram'a işlendi!").css("color", "#2ecc71"); },
+                error: function() { $("#durum-yazi").text("Hata oluştu!").css("color", "#e74c3c"); }
+            });
+        }
+
+        $("#btn-esp").click(function() {
+            durum.esp = (durum.esp === "AKTIF") ? "PASIF" : "AKTIF";
+            arayuzGuncelle();
+            telegramaKomutAt(`KOMUT:ESP_${durum.esp}`);
+        });
+
+        $("#btn-android").click(function() {
+            durum.android = (durum.android === "AKTIF") ? "PASIF" : "AKTIF";
+            arayuzGuncelle();
+            telegramaKomutAt(`KOMUT:ANDROID_${durum.android}`);
+        });
+    </script>
+</body>
+</html>
