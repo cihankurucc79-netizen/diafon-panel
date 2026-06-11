@@ -30,64 +30,73 @@
     </div>
 
     <script>
-        // KANKA BOTFATHER'DAN ALDIĞIN TOKEN'I BURAYA YAZDIK
-        // KANKA BOTFATHER'DAN ALDIĞIN TOKEN
-const BOT_TOKEN = "8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA";
-// SENİN KİŞİSEL TELEGRAM ID NUMARAN
-const CHAT_ID = "8481437790";
-        // jQuery ile dynamic styling yapıyoruz, statik CSS'e ölüm kanka!
-        $("body").css({
-            "background-color": "#0f0f11", "color": "#fff", "font-family": "sans-serif",
-            "display": "flex", "justify-content": "center", "align-items": "center", "height": "100vh", "margin": "0"
-        });
-        $("#admin-kutusu").css({
-            "background-color": "#16161a", "padding": "25px", "border-radius": "12px",
-            "box-shadow": "0 8px 24px rgba(0,0,0,0.5)", "width": "300px", "border": "1px solid #24252d"
-        });
-        $(".satir").css({ "display": "flex", "justify-content": "space-between", "align-items": "center", "margin-bottom": "15px" });
-        $(".metin").css({ "font-size": "15px", "font-weight": "bold" });
-        $(".anahtar").css({ "padding": "8px 14px", "border-radius": "6px", "border": "none", "cursor": "pointer", "font-weight": "bold" });
+        $(document).ready(function() {
+    // ==========================================
+    // 🎛️ TELEGRAM AYARLARI (CİHAN DIAFON KONTROL)
+    // ==========================================
+    var botToken = "8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA";
+    var chatId = "8481437790";
 
-        // İlk durumlar varsayılan AKTIF
-        let durum = { esp: "AKTIF", android: "AKTIF" };
+    // Telegram API'sine arka planda istek atan ortak fonksiyonumuz
+    function telegramMesajGonder(mesaj) {
+        var url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        
+        // jQuery GET isteği ile Telegram sunucularına sinyal fırlatıyoruz
+        $.get(url, {
+            chat_id: chatId,
+            text: mesaj
+        })
+        .done(function(response) {
+            console.log("Sinyal Telegram'a uçtu kanka:", response);
+            // Sayfanın en altındaki durum barını yeşile boyayıp onay veriyoruz
+            $("#durum-bar").text("Telegram'a işlendi!").css("color", "#00ff00");
+        })
+        .fail(function(error) {
+            console.error("Hata oluştu kanka:", error);
+            // Sinyal gitmezse durum barını kırmızı yapıp uyarıyoruz
+            $("#durum-bar").text("Hata: Sinyal gitmedi!").css("color", "#ff0000");
+        });
+    }
 
-        function arayuzGuncelle() {
-            if(durum.esp === "AKTIF") {
-                $("#btn-esp").text("AÇIK").css({"background-color": "#2ecc71", "color": "#fff"});
-            } else {
-                $("#btn-esp").text("KAPALI").css({"background-color": "#e74c3c", "color": "#fff"});
-            }
-            if(durum.android === "AKTIF") {
-                $("#btn-android").text("AÇIK").css({"background-color": "#2ecc71", "color": "#fff"});
-            } else {
-                $("#btn-android").text("KAPALI").css({"background-color": "#e74c3c", "color": "#fff"});
-            }
+    // ==========================================
+    // ⚡ BUTON TETİKLEMELERİ VE DİNAMİK STİLLER
+    // ==========================================
+
+    // 1. ESP8266 Modülü Kontrol Butonu
+    $("#esp-buton").click(function() {
+        if ($(this).hasClass("aktif")) {
+            // Buton AÇIK'tı, şimdi KAPALI yapıyoruz
+            $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
+            telegramMesajGonder("Mesa komut:ESP pasif");
+        } else {
+            // Buton KAPALI'ydı, şimdi AÇIK yapıyoruz
+            $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
+            telegramMesajGonder("Mesa komut:ESP aktif");
         }
-        arayuzGuncelle();
+    });
 
-        // Doğrudan Telegram'a emir üfleyen AJAX fonksiyonu
-        function telegramaKomutAt(metin) {
-            $("#durum-yazi").text("Gönderiliyor...").css("color", "#f1c40f");
-            $.ajax({
-                url: `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-                method: "POST",
-                data: { chat_id: CHAT_ID, text: metin },
-                success: function() { $("#durum-yazi").text("Telegram'a işlendi!").css("color", "#2ecc71"); },
-                error: function() { $("#durum-yazi").text("Hata oluştu!").css("color", "#e74c3c"); }
-            });
+    // 2. Diafon Sinyal Kesici Kontrol Butonu
+    $("#diafon-buton").click(function() {
+        if ($(this).hasClass("aktif")) {
+            $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
+            telegramMesajGonder("Mesa komut:Diafon pasif");
+        } else {
+            $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
+            telegramMesajGonder("Mesa komut:Diafon aktif");
         }
+    });
 
-        $("#btn-esp").click(function() {
-            durum.esp = (durum.esp === "AKTIF") ? "PASIF" : "AKTIF";
-            arayuzGuncelle();
-            telegramaKomutAt(`KOMUT:ESP_${durum.esp}`);
-        });
-
-        $("#btn-android").click(function() {
-            durum.android = (durum.android === "AKTIF") ? "PASIF" : "AKTIF";
-            arayuzGuncelle();
-            telegramaKomutAt(`KOMUT:ANDROID_${durum.android}`);
-        });
+    // 3. Otomatik Kapı Açıcı Kontrol Butonu
+    $("#kapi-buton").click(function() {
+        if ($(this).hasClass("aktif")) {
+            $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
+            telegramMesajGonder("Mesa komut:Kapi pasif");
+        } else {
+            $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
+            telegramMesajGonder("Mesa komut:Kapi aktif");
+        }
+    });
+});
     </script>
 </body>
 </html>
