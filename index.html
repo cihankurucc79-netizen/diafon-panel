@@ -41,12 +41,11 @@
         // ==========================================
         // 🔐 SUPABASE FRANKFURT BAĞLANTI AYARLARI
         // ==========================================
-        // Kanka Frankfurt'tan aldığın o taze URL ve Key'leri buraya çakıyorsun:
         const SUPABASE_URL = "https://xxxxxxxxxxxxxx.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // Veritabanındaki satırımızı eşleştireceğimiz benzersiz ID
+        
+        // 🚨 KİLİT NOKTA: İsim çakışması olmasın diye istemci adını 'supabaseClient' yaptık kanka!
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const cihazId = "cihan_merkez_diafon";
 
         $(document).ready(function() {
@@ -63,9 +62,9 @@
                 "flex-direction": "column",
                 "justify-content": "center",
                 "align-items": "center",
-                "min-height": "100vh", // Mobilde dikeyde sıkışmayı önler kanka
+                "min-height": "100vh", // Mobilde tarayıcı barlarına çarpıp taşmayı önler kanka
                 "margin": "0",
-                "padding": "20px", // Telefon ekranında kenarlardan boşluk bırakır
+                "padding": "20px", // Telefon ekranında kenarlardan nefes alma payı
                 "box-sizing": "border-box"
             });
 
@@ -76,7 +75,7 @@
                 "border-radius": "15px",
                 "box-shadow": "0 0 25px #00ff00",
                 "width": "100%",
-                "max-width": "400px", // Masaüstünde devasa yayılmasın, kibar dursun
+                "max-width": "400px", // Bilgisayarda devasa yayılmasın, kibar dursun
                 "text-align": "center",
                 "border": "1px solid #333",
                 "box-sizing": "border-box"
@@ -90,7 +89,7 @@
                 "border-radius": "10px",
                 "box-shadow": "0 0 20px #00fffa",
                 "width": "100%",
-                "max-width": "400px", // Üsttekiyle milimetrik eşit genişlik kanka
+                "max-width": "400px", // Üsttekiyle milimetrik eşit genişlik
                 "margin-top": "25px", // İki kutu arasında siber boşluk
                 "text-align": "center",
                 "font-size": "13px",
@@ -139,7 +138,7 @@
             // Ortak Buton Ayarları
             $("button").css({
                 "width": "100px",
-                "min-width": "100px", // Mobilde yazılar sıkışıp kırılmasın kanka
+                "min-width": "100px", // Mobilde yazılar sıkışmasın kanka
                 "padding": "11px 0",
                 "font-size": "13px",
                 "font-weight": "bold",
@@ -150,7 +149,7 @@
                 "font-family": "'Courier New', Courier, monospace"
             });
 
-            // KAPALI (Pasif) Buton Neonu
+            // 🎨 NEON RENK GEÇİŞ FONKSİYONLARI
             function pasifStilYap(element) {
                 $(element).css({
                     "background-color": "#ff0033",
@@ -159,7 +158,6 @@
                 });
             }
 
-            // AÇIK (Aktif) Buton Neonu
             function aktifStilYap(element) {
                 $(element).css({
                     "background-color": "#00ff00",
@@ -168,8 +166,14 @@
                 });
             }
 
-            // İlk açılışta butonları kırmızı boya kanka
-            pasifStilYap("button");
+            // 🔄 Butonların başlangıç renklerini class'larına göre dinamik atayalım kanka
+            $("button").each(function() {
+                if ($(this).hasClass("aktif")) {
+                    aktifStilYap(this);
+                } else {
+                    pasifStilYap(this);
+                }
+            });
 
             // Alt durum barı stili
             $("#durum-bar").css({
@@ -210,13 +214,13 @@
                 let guncellenecekVeri = {};
                 guncellenecekVeri[sutunAdi] = durumDegeri;
 
-                const { error } = await supabase
+                // Burayı da yeni tanımladığımız 'supabaseClient' ile güncelledik kanka
+                const { error } = await supabaseClient
                     .from('diafon_kontrol')
                     .update(guncellenecekVeri)
                     .eq('cihaz_id', cihazId);
 
                 if (!error) {
-                    // 🟢 İşlem tamsa o istediğin alt textview alanına siber raporu çakıyoruz kanka!
                     $("#supabase-log-ekrani")
                         .text(`Supabase: ${logMesaji}`)
                         .css("color", "#00fffa");
