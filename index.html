@@ -41,51 +41,57 @@
         // ==========================================
         // 🔐 SUPABASE FRANKFURT BAĞLANTI AYARLARI
         // ==========================================
-    
+        // Kanka Frankfurt'tan aldığın o taze URL ve Key'leri buraya çakıyorsun:
+        const SUPABASE_URL = "https://xxxxxxxxxxxxxx.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; 
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Veritabanındaki satırımızı eşleştireceğimiz benzersiz ID
+        const cihazId = "cihan_merkez_diafon";
+
         $(document).ready(function() {
             // ==========================================
-            // 🎨 HEM MASAÜSTÜ HEM MOBİL RESPONSIVE NEON AYARLAR
+            // 🎨 RESPONSIVE NEON TASARIM AYARLARI (CSS YOK)
             // ==========================================
             
-            // Tüm sayfayı kaplayan siber ana gövde
+            // Tüm ekranı kaplayan siber arka plan
             $("body").css({
                 "background-color": "#0d0d0d",
                 "color": "#ffffff",
                 "font-family": "'Courier New', Courier, monospace",
                 "display": "flex",
-                "flex-direction": "column", // Kutular her zaman alt alta merkezlensin
+                "flex-direction": "column",
                 "justify-content": "center",
                 "align-items": "center",
-                "min-height": "100vh", // Mobilde tarayıcı barlarına çarpıp taşmayı önler
+                "min-height": "100vh", // Mobilde dikeyde sıkışmayı önler kanka
                 "margin": "0",
-                "padding": "20px", // Mobilde kenarlardan nefes alma payı kanka
+                "padding": "20px", // Telefon ekranında kenarlardan boşluk bırakır
                 "box-sizing": "border-box"
             });
 
-            // 🟢 ÜSTTEKİ ANA KONTROL KUTUSU (Yeşil Neon)
+            // Üstteki Ana Panel (Yeşil Neon Box)
             $("#panel-container").css({
                 "background-color": "#1a1a1a",
                 "padding": "30px",
                 "border-radius": "15px",
                 "box-shadow": "0 0 25px #00ff00",
-                "width": "100%", // Mobilde ekrana yapışmasın diye %100 verdik
-                "max-width": "400px", // Bilgisayarda maksimum bu kadar genişlesin kanka, yayılmasın
+                "width": "100%",
+                "max-width": "400px", // Masaüstünde devasa yayılmasın, kibar dursun
                 "text-align": "center",
                 "border": "1px solid #333",
-                "box-sizing": "border-box",
-                "margin-bottom": "0" // Alttaki kutuyla mesafeyi flex halledecek
+                "box-sizing": "border-box"
             });
 
-            // 🎯 ALTAKİ SUPABASE RAPORLAMA KUTUSU (Mavi/Cyan Neon)
+            // Alttaki Supabase Durum Ekranı (Cyan Neon Box)
             $("#supabase-log-ekrani").css({
                 "background-color": "#111111",
                 "color": "#00fffa",
                 "padding": "15px",
                 "border-radius": "10px",
                 "box-shadow": "0 0 20px #00fffa",
-                "width": "100%", // Üstteki kutuyla aynı esneklikte
-                "max-width": "400px", // PC'de üsttekiyle milimetrik eşit durur
-                "margin-top": "25px", // İki kutu arasında şık bir siber boşluk
+                "width": "100%",
+                "max-width": "400px", // Üsttekiyle milimetrik eşit genişlik kanka
+                "margin-top": "25px", // İki kutu arasında siber boşluk
                 "text-align": "center",
                 "font-size": "13px",
                 "font-weight": "bold",
@@ -94,7 +100,7 @@
                 "box-sizing": "border-box"
             });
 
-            // Başlık Tasarımı
+            // Başlık Stili
             $("h1").css({
                 "color": "#00ff00",
                 "font-size": "22px",
@@ -112,7 +118,7 @@
                 "margin": "20px 0"
             });
 
-            // 🎛️ Buton Satırları (Burayı esnek yaptık kanka, PC'de ve telefonda hizayı bozmaz)
+            // Esnek Buton Satırları
             $(".buton-satir").css({
                 "display": "flex",
                 "justify-content": "space-between",
@@ -121,7 +127,7 @@
                 "width": "100%"
             });
 
-            // Buton Etiketleri (ESP8266 Modülü vs yazan yerler)
+            // Etiketler
             $(".buton-etiket").css({
                 "font-size": "14px",
                 "color": "#cccccc",
@@ -130,10 +136,10 @@
                 "padding-right": "10px"
             });
 
-            // Butonların Kendisi (Genişliğini sabit değil, esnek yaptık kanka)
+            // Ortak Buton Ayarları
             $("button").css({
                 "width": "100px",
-                "min-width": "100px", // Mobilde yazı sığışsın diye kilitledik
+                "min-width": "100px", // Mobilde yazılar sıkışıp kırılmasın kanka
                 "padding": "11px 0",
                 "font-size": "13px",
                 "font-weight": "bold",
@@ -144,7 +150,7 @@
                 "font-family": "'Courier New', Courier, monospace"
             });
 
-            // Pasif (KAPALI) Buton Stili
+            // KAPALI (Pasif) Buton Neonu
             function pasifStilYap(element) {
                 $(element).css({
                     "background-color": "#ff0033",
@@ -153,7 +159,7 @@
                 });
             }
 
-            // Aktif (AÇIK) Buton Stili
+            // AÇIK (Aktif) Buton Neonu
             function aktifStilYap(element) {
                 $(element).css({
                     "background-color": "#00ff00",
@@ -162,10 +168,10 @@
                 });
             }
 
-            // Sayfa ilk açıldığında render alalım
+            // İlk açılışta butonları kırmızı boya kanka
             pasifStilYap("button");
 
-            // Alt durum çubuğu
+            // Alt durum barı stili
             $("#durum-bar").css({
                 "font-size": "13px",
                 "color": "#888888",
@@ -173,6 +179,103 @@
                 "font-weight": "bold",
                 "letter-spacing": "1px"
             });
+
+
+            // ==========================================
+            // 🎛️ TELEGRAM BAĞLANTI AYARLARI
+            // ==========================================
+            var botToken = "8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA";
+            var chatId = "8481437790";
+
+            function telegramMesajGonder(mesaj) {
+                var url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                $("#durum-bar").text("Sinyal gönderiliyor...").css("color", "#ffff00");
+
+                $.get(url, { chat_id: chatId, text: mesaj })
+                .done(function(response) {
+                    $("#durum-bar").text("Telegram'a işlendi!").css("color", "#00ff00");
+                })
+                .fail(function(error) {
+                    $("#durum-bar").text("Hata: Sinyal gitmedi!").css("color", "#ff0000");
+                });
+            }
+
+
+            // ==========================================
+            // 💾 SUPABASE VERİTABANI GÜNCELLEME SİSTEMİ
+            // ==========================================
+            async function supabaseGuncelle(sutunAdi, durumDegeri, logMesaji) {
+                $("#supabase-log-ekrani").text("Supabase eşitleniyor... ⚡").css("color", "#ffff00");
+
+                let guncellenecekVeri = {};
+                guncellenecekVeri[sutunAdi] = durumDegeri;
+
+                const { error } = await supabase
+                    .from('diafon_kontrol')
+                    .update(guncellenecekVeri)
+                    .eq('cihaz_id', cihazId);
+
+                if (!error) {
+                    // 🟢 İşlem tamsa o istediğin alt textview alanına siber raporu çakıyoruz kanka!
+                    $("#supabase-log-ekrani")
+                        .text(`Supabase: ${logMesaji}`)
+                        .css("color", "#00fffa");
+                } else {
+                    console.error(error);
+                    $("#supabase-log-ekrani").text("Supabase siber bağlantı hatası! ❌").css("color", "#ff0033");
+                }
+            }
+
+
+            // ==========================================
+            // ⚡ BUTON TIKLAMA OLAYLARI (İKİLİ TETİKLEME)
+            // ==========================================
+
+            // 1. ESP8266 Modülü Butonu
+            $("#esp-buton").click(function() {
+                if ($(this).hasClass("aktif")) {
+                    $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
+                    pasifStilYap(this);
+                    telegramMesajGonder("Mesa komut:ESP pasif");
+                    supabaseGuncelle("esp_aktif", false, "ESP8266 Pasif Edildi 🔴");
+                } else {
+                    $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
+                    aktifStilYap(this);
+                    telegramMesajGonder("Mesa komut:ESP aktif");
+                    supabaseGuncelle("esp_aktif", true, "ESP8266 Aktif Edildi 🟢");
+                }
+            });
+
+            // 2. Diafon Sinyal Kesici Butonu
+            $("#diafon-buton").click(function() {
+                if ($(this).hasClass("aktif")) {
+                    $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
+                    pasifStilYap(this);
+                    telegramMesajGonder("Mesa komut:Diafon pasif");
+                    supabaseGuncelle("kesici_aktif", false, "Sinyal Kesici Pasif Edildi 🔴");
+                } else {
+                    $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
+                    aktifStilYap(this);
+                    telegramMesajGonder("Mesa komut:Diafon aktif");
+                    supabaseGuncelle("kesici_aktif", true, "Sinyal Kesici Aktif Edildi 🟢");
+                }
+            });
+
+            // 3. Otomatik Kapı Açıcı Butonu
+            $("#kapi-buton").click(function() {
+                if ($(this).hasClass("aktif")) {
+                    $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
+                    pasifStilYap(this);
+                    telegramMesajGonder("Mesa komut:Kapi pasif");
+                    supabaseGuncelle("kapi_aktif", false, "Kapı Açıcı Pasif Edildi 🔴");
+                } else {
+                    $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
+                    aktifStilYap(this);
+                    telegramMesajGonder("Mesa komut:Kapi aktif");
+                    supabaseGuncelle("kapi_aktif", true, "Kapı Açıcı Aktif Edildi 🟢");
+                }
+            });
+        });
     </script>
 </body>
 </html>
