@@ -49,6 +49,20 @@
 
         $(document).ready(function() {
             // CSS Tasarımı
+            // SAYFA YÜKLENDİĞİNDE VERİYİ ÇEK (Eklenecek Kısım)
+            supabaseClient
+                .from('diafon_kontrol')
+                .select('*')
+                .eq('cihaz_id', cihazId)
+                .single()
+                .then(({ data, error }) => {
+                    if (data) {
+                        setStyle("#esp-buton", data.esp_aktif);
+                        setStyle("#diafon-buton", data.kesici_aktif);
+                        setStyle("#kapi-buton", data.kapi_aktif);
+                        $("#durum-bar").text("Sistem durumu yüklendi!");
+                    }
+                });
             $("body").css({ "background-color": "#0d0d0d", "color": "#ffffff", "font-family": "'Courier New', Courier, monospace", "display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "center", "min-height": "100vh", "margin": "0", "padding": "20px", "box-sizing": "border-box" });
             $("#panel-container").css({ "background-color": "#1a1a1a", "padding": "30px", "border-radius": "15px", "box-shadow": "0 0 25px #00ff00", "width": "100%", "max-width": "400px", "text-align": "center", "border": "1px solid #333" });
             $("#supabase-log-ekrani").css({ "background-color": "#111111", "color": "#00fffa", "padding": "15px", "border-radius": "10px", "box-shadow": "0 0 20px #00fffa", "width": "100%", "max-width": "400px", "margin-top": "25px", "text-align": "center", "font-size": "13px", "font-weight": "bold", "border": "1px solid #222" });
