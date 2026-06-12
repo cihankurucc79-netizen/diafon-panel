@@ -45,9 +45,9 @@
         // ==========================================
         // ⚠️ Kanka buraları kendi Supabase panelindeki orijinal temiz URL ve Anon Key ile doldur!
         // 🚨 Kanka burası artık tam doğru:
-const SUPABASE_URL = "https://kendi-proje-url-adresin.supabase.co"; // URL'i API sekmesinden kopyala!
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_URL = "https://tltekqwfkqaqlmmbzsmw.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_tEUn4TkI3Pc4zy8UwrqjIg_aplGStsz";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const cihazId = "cihan_merkez_diafon";
 
         $(document).ready(function() {
