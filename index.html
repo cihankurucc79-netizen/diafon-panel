@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cihan Diafon Otomasyon Paneli</title>
-    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -30,165 +29,88 @@
         </div>
 
         <hr class="cizgi">
-        
         <div id="durum-bar">Sistem hazır kanka.</div>
     </div>
 
     <div id="supabase-log-ekrani">
         ⚡ Supabase Canlı Veri Akışı Bekleniyor...
     </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
         // ==========================================
-        // 🔐 SUPABASE FRANKFURT BAĞLANTI AYARLARI
+        // 🔐 FRANKFURT BAĞLANTI AYARLARI (GÜNCELLENDİ)
         // ==========================================
-        // ⚠️ Kanka buraları kendi Supabase panelindeki orijinal temiz URL ve Anon Key ile doldur!
-        // 🚨 Kanka burası artık tam doğru:
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const SUPABASE_URL = "https://tltekqwfkqaqlmmbzsmw.supabase.co"; 
-const SUPABASE_ANON_KEY = "sb_publishable_tEUn4TkI3Pc4zy8UwrqjIg_aplGStsz";
+        const SUPABASE_ANON_KEY = "sb_publishable_tEUn4TkI3Pc4zy8UwrqjIg_aplGStsz"; 
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const cihazId = "cihan_merkez_diafon";
 
         $(document).ready(function() {
-            // ==========================================
-            // 🎨 RESPONSIVE NEON TASARIM AYARLARI (CSS YOK)
-            // ==========================================
-            $("body").css({
-                "background-color": "#0d0d0d", "color": "#ffffff", "font-family": "'Courier New', Courier, monospace",
-                "display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "center",
-                "min-height": "100vh", "margin": "0", "padding": "20px", "box-sizing": "border-box"
-            });
+            // CSS Tasarımı
+            $("body").css({ "background-color": "#0d0d0d", "color": "#ffffff", "font-family": "'Courier New', Courier, monospace", "display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "center", "min-height": "100vh", "margin": "0", "padding": "20px", "box-sizing": "border-box" });
+            $("#panel-container").css({ "background-color": "#1a1a1a", "padding": "30px", "border-radius": "15px", "box-shadow": "0 0 25px #00ff00", "width": "100%", "max-width": "400px", "text-align": "center", "border": "1px solid #333" });
+            $("#supabase-log-ekrani").css({ "background-color": "#111111", "color": "#00fffa", "padding": "15px", "border-radius": "10px", "box-shadow": "0 0 20px #00fffa", "width": "100%", "max-width": "400px", "margin-top": "25px", "text-align": "center", "font-size": "13px", "font-weight": "bold", "border": "1px solid #222" });
+            $("h1").css({ "color": "#00ff00", "font-size": "22px", "margin-bottom": "20px", "text-shadow": "0 0 10px #00ff00" });
+            $(".buton-satir").css({ "display": "flex", "justify-content": "space-between", "align-items": "center", "margin": "18px 0" });
+            $("button").css({ "width": "100px", "padding": "11px 0", "font-weight": "bold", "border": "none", "border-radius": "8px", "cursor": "pointer" });
 
-            $("#panel-container").css({
-                "background-color": "#1a1a1a", "padding": "30px", "border-radius": "15px", "box-shadow": "0 0 25px #00ff00",
-                "width": "100%", "max-width": "400px", "text-align": "center", "border": "1px solid #333", "box-sizing": "border-box"
-            });
+            function setStyle(el, active) {
+                if(active) $(el).css({"background-color": "#00ff00", "color": "#000", "box-shadow": "0 0 18px #00ff00"}).text("AÇIK").removeClass("pasif").addClass("aktif");
+                else $(el).css({"background-color": "#ff0033", "color": "#fff", "box-shadow": "0 0 12px #ff0033"}).text("KAPALI").removeClass("aktif").addClass("pasif");
+            }
 
-            $("#supabase-log-ekrani").css({
-                "background-color": "#111111", "color": "#00fffa", "padding": "15px", "border-radius": "10px", "box-shadow": "0 0 20px #00fffa",
-                "width": "100%", "max-width": "400px", "margin-top": "25px", "text-align": "center", "font-size": "13px", "font-weight": "bold",
-                "border": "1px solid #222", "letter-spacing": "1px", "box-sizing": "border-box"
-            });
+            // Başlangıçta pasif ayarla
+            $("button").each(function() { setStyle(this, false); });
 
-            $("h1").css({ "color": "#00ff00", "font-size": "22px", "letter-spacing": "2px", "margin-top": "0", "margin-bottom": "20px", "text-shadow": "0 0 10px #00ff00" });
-            $(".cizgi").css({ "border": "0", "height": "1px", "background": "#333", "margin": "20px 0" });
-            $(".buton-satir").css({ "display": "flex", "justify-content": "space-between", "align-items": "center", "margin": "18px 0", "width": "100%" });
-            $(".buton-etiket").css({ "font-size": "14px", "color": "#cccccc", "font-weight": "bold", "text-align": "left", "padding-right": "10px" });
-            
-            $("button").css({
-                "width": "100px", "min-width": "100px", "padding": "11px 0", "font-size": "13px", "font-weight": "bold",
-                "border": "none", "border-radius": "8px", "cursor": "pointer", "transition": "all 0.3s ease", "font-family": "'Courier New', Courier, monospace"
-            });
-
-            function pasifStilYap(element) { $(element).css({ "background-color": "#ff0033", "color": "#ffffff", "box-shadow": "0 0 12px #ff0033" }); }
-            function aktifStilYap(element) { $(element).css({ "background-color": "#00ff00", "color": "#000000", "box-shadow": "0 0 18px #00ff00" }); }
-
-            $("button").each(function() {
-                if ($(this).hasClass("aktif")) { aktifStilYap(this); } else { pasifStilYap(this); }
-            });
-
-            $("#durum-bar").css({ "font-size": "13px", "color": "#888888", "margin-top": "15px", "font-weight": "bold", "letter-spacing": "1px" });
-
-            // ==========================================
-            // 🎛️ TELEGRAM BAĞLANTI AYARLARI
-            // ==========================================
-            var botToken = "8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA";
-            var chatId = "8481437790";
-
-            function telegramMesajGonder(mesaj) {
-                $("#durum-bar").text("Sinyal gönderiliyor...").css("color", "#ffff00");
-
+            // Telegram
+            function telegramMesajGonder(msg) {
+                $("#durum-bar").text("Sinyal gönderiliyor...");
                 $.ajax({
-                    url: `https://api.telegram.org/bot${botToken}/sendMessage`,
+                    url: `https://api.telegram.org/bot8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA/sendMessage`,
                     type: 'POST',
-                    data: {
-                        chat_id: chatId,
-                        text: mesaj
-                    },
-                    success: function(response) {
-                        $("#durum-bar").text("Telegram'a işlendi!").css("color", "#00ff00");
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Telegram Siber Hata:", error);
-                        $("#durum-bar").text("Hata: Telegram engelledi!").css("color", "#ff0000");
-                    }
+                    data: { chat_id: "8481437790", text: msg },
+                    success: () => $("#durum-bar").text("Telegram OK!").css("color", "#00ff00"),
+                    error: () => $("#durum-bar").text("Telegram Hata!").css("color", "#ff0000")
                 });
             }
 
-            // ==========================================
-            // 💾 SUPABASE VERİTABANI GÜNCELLEME SİSTEMİ
-            // ==========================================
-            async function supabaseGuncelle(sutunAdi, durumDegeri, logMesaji) {
-                $("#supabase-log-ekrani").text("Supabase eşitleniyor... ⚡").css("color", "#ffff00");
+            // Supabase
+            async function supabaseGuncelle(col, val, msg) {
+                $("#supabase-log-ekrani").text("Supabase eşitleniyor...").css("color", "#ffff00");
+                const { error } = await supabaseClient
+                    .from('diafon_kontrol')
+                    .update({ [col]: val })
+                    .eq('cihaz_id', cihazId);
 
-                let guncellenecekVeri = {};
-                guncellenecekVeri[sutunAdi] = durumDegeri;
-
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('diafon_kontrol')
-                        .update(guncellenecekVeri)
-                        .eq('cihaz_id', cihazId)
-                        .select();
-
-                    if (error) throw error;
-
-                    if (data && data.length === 0) {
-                        $("#supabase-log-ekrani").text("Hata: cihaz_id veritabanında yok! ❌").css("color", "#ffaa00");
-                    } else {
-                        $("#supabase-log-ekrani").text(`Supabase: ${logMesaji}`).css("color", "#00fffa");
-                    }
-
-                } catch (err) {
-                    console.error("Supabase Detaylı Siber Hata:", err);
-                    $("#supabase-log-ekrani").text(`Bağlantı Hatası: ${err.message || 'RLS Engeli'} ❌`).css("color", "#ff0033");
+                if (error) {
+                    console.error(error);
+                    $("#supabase-log-ekrani").text("Supabase Hata: " + error.message).css("color", "#ff0000");
+                } else {
+                    $("#supabase-log-ekrani").text("Supabase: " + msg).css("color", "#00fffa");
                 }
             }
 
-            // ==========================================
-            // ⚡ BUTON TIKLAMA OLAYLARI
-            // ==========================================
+            // Butonlar
             $("#esp-buton").click(function() {
-                if ($(this).hasClass("aktif")) {
-                    $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
-                    pasifStilYap(this);
-                    telegramMesajGonder("Mesa komut:ESP pasif");
-                    supabaseGuncelle("esp_aktif", false, "ESP8266 Pasif Edildi 🔴");
-                } else {
-                    $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
-                    aktifStilYap(this);
-                    telegramMesajGonder("Mesa komut:ESP aktif");
-                    supabaseGuncelle("esp_aktif", true, "ESP8266 Aktif Edildi 🟢");
-                }
+                const isActive = $(this).hasClass("pasif");
+                setStyle(this, isActive);
+                telegramMesajGonder("Komut: ESP " + (isActive ? "Aktif" : "Pasif"));
+                supabaseGuncelle("esp_aktif", isActive, "ESP " + (isActive ? "Açıldı" : "Kapandı"));
             });
 
             $("#diafon-buton").click(function() {
-                if ($(this).hasClass("aktif")) {
-                    $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
-                    pasifStilYap(this);
-                    telegramMesajGonder("Mesa komut:Diafon pasif");
-                    supabaseGuncelle("kesici_aktif", false, "Sinyal Kesici Pasif Edildi 🔴");
-                } else {
-                    $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
-                    aktifStilYap(this);
-                    telegramMesajGonder("Mesa komut:Diafon aktif");
-                    supabaseGuncelle("kesici_aktif", true, "Sinyal Kesici Aktif Edildi 🟢");
-                }
+                const isActive = $(this).hasClass("pasif");
+                setStyle(this, isActive);
+                telegramMesajGonder("Komut: Diafon " + (isActive ? "Aktif" : "Pasif"));
+                supabaseGuncelle("kesici_aktif", isActive, "Diafon " + (isActive ? "Açıldı" : "Kapandı"));
             });
 
             $("#kapi-buton").click(function() {
-                if ($(this).hasClass("aktif")) {
-                    $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
-                    pasifStilYap(this);
-                    telegramMesajGonder("Mesa komut:Kapi pasif");
-                    supabaseGuncelle("kapi_aktif", false, "Kapı Açıcı Pasif Edildi 🔴");
-                } else {
-                    $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
-                    aktifStilYap(this);
-                    telegramMesajGonder("Mesa komut:Kapi aktif");
-                    supabaseGuncelle("kapi_aktif", true, "Kapı Açıcı Aktif Edildi 🟢");
-                }
+                const isActive = $(this).hasClass("pasif");
+                setStyle(this, isActive);
+                telegramMesajGonder("Komut: Kapi " + (isActive ? "Aktif" : "Pasif"));
+                supabaseGuncelle("kapi_aktif", isActive, "Kapi " + (isActive ? "Açıldı" : "Kapandı"));
             });
         });
     </script>
