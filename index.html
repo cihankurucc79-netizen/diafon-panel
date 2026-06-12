@@ -127,6 +127,23 @@
                 telegramMesajGonder("Komut: Kapi " + (isActive ? "Aktif" : "Pasif"));
                 supabaseGuncelle("kapi_aktif", isActive, "Kapi " + (isActive ? "Açıldı" : "Kapandı"));
             });
+            // Realtime Aboneliği
+supabaseClient
+  .channel('diafon_kontrol_channel')
+  .on('postgres_changes', { 
+    event: 'UPDATE', 
+    schema: 'public', 
+    table: 'diafon_kontrol',
+    filter: 'cihaz_id=eq.' + cihazId 
+  }, payload => {
+    console.log('Değişim algılandı:', payload.new);
+    // Gelen yeni veriye göre butonları güncelle
+    setStyle("#esp-buton", payload.new.esp_aktif);
+    setStyle("#diafon-buton", payload.new.kesici_aktif);
+    setStyle("#kapi-buton", payload.new.kapi_aktif);
+    $("#supabase-log-ekrani").text("Sistem güncellendi!").css("color", "#00ff00");
+  })
+  .subscribe();
         });
     </script>
 </body>
