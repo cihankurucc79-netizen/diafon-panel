@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cihan Diafon Otomasyon Paneli</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -32,14 +33,32 @@
         <div id="durum-bar">Sistem hazır kanka.</div>
     </div>
 
+    <div id="supabase-log-ekrani">
+        ⚡ Supabase Canlı Veri Akışı Bekleniyor...
+    </div>
+
     <script>
+        // ==========================================
+        // 🔐 SUPABASE FRANKFURT BAĞLANTI AYARLARI
+        // ==========================================
+        // Kanka Frankfurt'taki yeni projenin URL ve anon key kodlarını buraya yapıştırıyorsun:
+        const SUPABASE_URL = "https://xxxxxxxxxxxxxx.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; 
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Takip edeceğimiz sabit cihaz id veya mac adresi kanka
+        const cihazId = "cihan_merkez_diafon";
+
         $(document).ready(function() {
-            // CSS dosyası kullanmadan sayfayı jQuery ile simsiyah ve neon yapıyoruz kanka
+            // ==========================================
+            // 🎨 JQUERY DİNAMİK STİL VE NEON AYARLARI
+            // ==========================================
             $("body").css({
                 "background-color": "#0d0d0d",
                 "color": "#ffffff",
                 "font-family": "'Courier New', Courier, monospace",
                 "display": "flex",
+                "flex-direction": "column", // Kanka alt alta dizilsinler diye column yaptık
                 "justify-content": "center",
                 "align-items": "center",
                 "height": "100vh",
@@ -54,6 +73,22 @@
                 "width": "350px",
                 "text-align": "center",
                 "border": "1px solid #333"
+            });
+
+            // 🎯 İSTEDİĞİN O ALT BOX'IN NEON TASARIMI (CSS YOK, SAF JQUERY)
+            $("#supabase-log-ekrani").css({
+                "background-color": "#111111",
+                "color": "#00fffa", // Siber Cyan mavisi/yeşili tonu kanka, okuması kolay olsun
+                "padding": "15px",
+                "border-radius": "10px",
+                "box-shadow": "0 0 15px #00fffa",
+                "width": "350px",
+                "margin-top": "20px", // Ana kutunun tam altında boşluk bıraktık
+                "text-align": "center",
+                "font-size": "12px",
+                "font-weight": "bold",
+                "border": "1px solid #222",
+                "letter-spacing": "1px"
             });
 
             $("h1").css({
@@ -73,7 +108,6 @@
 
             $(".buton-satir").css({
                 "display": "flex",
-                "justify-content": "between",
                 "align-items": "center",
                 "margin": "15px 0",
                 "justify-content": "space-between"
@@ -85,7 +119,6 @@
                 "font-weight": "bold"
             });
 
-            // Butonların ortak ilk tasarımları
             $("button").css({
                 "width": "100px",
                 "padding": "10px",
@@ -98,7 +131,6 @@
                 "font-family": "'Courier New', Courier, monospace"
             });
 
-            // KAPALI (Pasif) butonların kırmızı neon stili
             function pasifStilYap(element) {
                 $(element).css({
                     "background-color": "#ff0033",
@@ -107,7 +139,6 @@
                 });
             }
 
-            // AÇIK (Aktif) butonların yeşil neon stili
             function aktifStilYap(element) {
                 $(element).css({
                     "background-color": "#00ff00",
@@ -116,7 +147,6 @@
                 });
             }
 
-            // Sayfa ilk açıldığında tüm butonları kırmızı (KAPALI) yapıyoruz
             pasifStilYap("button");
 
             $("#durum-bar").css({
@@ -128,32 +158,54 @@
 
 
             // ==========================================
-            // 🎛️ TELEGRAM AYARLARI (CİHAN DIAFON KONTROL)
+            // 🎛️ TELEGRAM AYARLARI
             // ==========================================
             var botToken = "8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA";
             var chatId = "8481437790";
 
             function telegramMesajGonder(mesaj) {
                 var url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-                
                 $("#durum-bar").text("Sinyal gönderiliyor...").css("color", "#ffff00");
 
-                $.get(url, {
-                    chat_id: chatId,
-                    text: mesaj
-                })
+                $.get(url, { chat_id: chatId, text: mesaj })
                 .done(function(response) {
-                    console.log("Telegram'a uçtu kanka:", response);
                     $("#durum-bar").text("Telegram'a işlendi!").css("color", "#00ff00");
                 })
                 .fail(function(error) {
-                    console.error("Hata oldu kanka:", error);
                     $("#durum-bar").text("Hata: Sinyal gitmedi!").css("color", "#ff0000");
                 });
             }
 
             // ==========================================
-            // ⚡ BUTON TIKLAMA OLAYLARI VE TELEGRAM TETİKLEME
+            // 💾 SUPABASE VERİTABANI GÜNCELLEME SİSTEMİ
+            // ==========================================
+            // Kanka bu fonksiyon hangi buton basıldıysa Supabase'e yazar ve alttaki kutuya basar
+            async function supabaseGuncelle(sutunAdi, durumDegeri, logMesaji) {
+                $("#supabase-log-ekrani").text("Supabase eşitleniyor... ⚡").css("color", "#ffff00");
+
+                // Dinamik olarak hangi sütun tetiklendiyse obje oluşturuyoruz
+                let guncellenecekVeri = {};
+                guncellenecekVeri[sutunAdi] = durumDegeri;
+
+                const { error } = await supabase
+                    .from('diafon_kontrol')
+                    .update(guncellenecekVeri)
+                    .eq('cihaz_id', cihazId);
+
+                if (!error) {
+                    // 🟢 İşlem başarılıysa tam istediğin o alt kutuya siber yazıyı çakıyoruz kanka!
+                    $("#supabase-log-ekrani")
+                        .text(`Supabase: ${logMesaji}`)
+                        .css("color", "#00fffa");
+                } else {
+                    console.error(error);
+                    $("#supabase-log-ekrani").text("Supabase siber bağlantı hatası! ❌").css("color", "#ff0033");
+                }
+            }
+
+
+            // ==========================================
+            // ⚡ BUTON TIKLAMA OLAYLARI (BİRLEŞİK OPERASYON)
             // ==========================================
 
             // 1. ESP8266 Butonu
@@ -162,36 +214,44 @@
                     $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
                     pasifStilYap(this);
                     telegramMesajGonder("Mesa komut:ESP pasif");
+                    // Supabase'i bilgilendiriyoruz kanka
+                    supabaseGuncelle("esp_aktif", false, "ESP8266 Pasif Edildi 🔴");
                 } else {
                     $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
                     aktifStilYap(this);
                     telegramMesajGonder("Mesa komut:ESP aktif");
+                    // Supabase'i bilgilendiriyoruz kanka
+                    supabaseGuncelle("esp_aktif", true, "ESP8266 Aktif Edildi 🟢");
                 }
             });
 
-            // 2. Diafon Butonu
+            // 2. Diafon Sinyal Kesici Butonu
             $("#diafon-buton").click(function() {
                 if ($(this).hasClass("aktif")) {
                     $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
                     pasifStilYap(this);
                     telegramMesajGonder("Mesa komut:Diafon pasif");
+                    supabaseGuncelle("kesici_aktif", false, "Sinyal Kesici Pasif Edildi 🔴");
                 } else {
                     $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
                     aktifStilYap(this);
                     telegramMesajGonder("Mesa komut:Diafon aktif");
+                    supabaseGuncelle("kesici_aktif", true, "Sinyal Kesici Aktif Edildi 🟢");
                 }
             });
 
-            // 3. Kapı Butonu
+            // 3. Otomatik Kapı Açıcı Butonu
             $("#kapi-buton").click(function() {
                 if ($(this).hasClass("aktif")) {
                     $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
                     pasifStilYap(this);
                     telegramMesajGonder("Mesa komut:Kapi pasif");
+                    supabaseGuncelle("kapi_aktif", false, "Kapı Açıcı Pasif Edildi 🔴");
                 } else {
                     $(this).removeClass("pasif").addClass("aktif").text("AÇIK");
                     aktifStilYap(this);
                     telegramMesajGonder("Mesa komut:Kapi aktif");
+                    supabaseGuncelle("kapi_aktif", true, "Kapı Açıcı Aktif Edildi 🟢");
                 }
             });
         });
