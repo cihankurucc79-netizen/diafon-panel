@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cihan Diafon Otomasyon Paneli</title>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -36,16 +37,16 @@
     <div id="supabase-log-ekrani">
         ⚡ Supabase Canlı Veri Akışı Bekleniyor...
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         // ==========================================
         // 🔐 SUPABASE FRANKFURT BAĞLANTI AYARLARI
         // ==========================================
+        // ⚠️ Kanka buraları kendi Supabase panelindeki orijinal temiz URL ve Anon Key ile doldur!
         const SUPABASE_URL = "https://xxxxxxxxxxxxxx.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; 
         
-        // 🚨 KİLİT NOKTA: İsim çakışması olmasın diye istemci adını 'supabaseClient' yaptık kanka!
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const cihazId = "cihan_merkez_diafon";
 
@@ -53,138 +54,41 @@
             // ==========================================
             // 🎨 RESPONSIVE NEON TASARIM AYARLARI (CSS YOK)
             // ==========================================
-            
-            // Tüm ekranı kaplayan siber arka plan
             $("body").css({
-                "background-color": "#0d0d0d",
-                "color": "#ffffff",
-                "font-family": "'Courier New', Courier, monospace",
-                "display": "flex",
-                "flex-direction": "column",
-                "justify-content": "center",
-                "align-items": "center",
-                "min-height": "100vh", // Mobilde tarayıcı barlarına çarpıp taşmayı önler kanka
-                "margin": "0",
-                "padding": "20px", // Telefon ekranında kenarlardan nefes alma payı
-                "box-sizing": "border-box"
+                "background-color": "#0d0d0d", "color": "#ffffff", "font-family": "'Courier New', Courier, monospace",
+                "display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "center",
+                "min-height": "100vh", "margin": "0", "padding": "20px", "box-sizing": "border-box"
             });
 
-            // Üstteki Ana Panel (Yeşil Neon Box)
             $("#panel-container").css({
-                "background-color": "#1a1a1a",
-                "padding": "30px",
-                "border-radius": "15px",
-                "box-shadow": "0 0 25px #00ff00",
-                "width": "100%",
-                "max-width": "400px", // Bilgisayarda devasa yayılmasın, kibar dursun
-                "text-align": "center",
-                "border": "1px solid #333",
-                "box-sizing": "border-box"
+                "background-color": "#1a1a1a", "padding": "30px", "border-radius": "15px", "box-shadow": "0 0 25px #00ff00",
+                "width": "100%", "max-width": "400px", "text-align": "center", "border": "1px solid #333", "box-sizing": "border-box"
             });
 
-            // Alttaki Supabase Durum Ekranı (Cyan Neon Box)
             $("#supabase-log-ekrani").css({
-                "background-color": "#111111",
-                "color": "#00fffa",
-                "padding": "15px",
-                "border-radius": "10px",
-                "box-shadow": "0 0 20px #00fffa",
-                "width": "100%",
-                "max-width": "400px", // Üsttekiyle milimetrik eşit genişlik
-                "margin-top": "25px", // İki kutu arasında siber boşluk
-                "text-align": "center",
-                "font-size": "13px",
-                "font-weight": "bold",
-                "border": "1px solid #222",
-                "letter-spacing": "1px",
-                "box-sizing": "border-box"
+                "background-color": "#111111", "color": "#00fffa", "padding": "15px", "border-radius": "10px", "box-shadow": "0 0 20px #00fffa",
+                "width": "100%", "max-width": "400px", "margin-top": "25px", "text-align": "center", "font-size": "13px", "font-weight": "bold",
+                "border": "1px solid #222", "letter-spacing": "1px", "box-sizing": "border-box"
             });
 
-            // Başlık Stili
-            $("h1").css({
-                "color": "#00ff00",
-                "font-size": "22px",
-                "letter-spacing": "2px",
-                "margin-top": "0",
-                "margin-bottom": "20px",
-                "text-shadow": "0 0 10px #00ff00"
-            });
-
-            // Ayırıcı Çizgiler
-            $(".cizgi").css({
-                "border": "0",
-                "height": "1px",
-                "background": "#333",
-                "margin": "20px 0"
-            });
-
-            // Esnek Buton Satırları
-            $(".buton-satir").css({
-                "display": "flex",
-                "justify-content": "space-between",
-                "align-items": "center",
-                "margin": "18px 0",
-                "width": "100%"
-            });
-
-            // Etiketler
-            $(".buton-etiket").css({
-                "font-size": "14px",
-                "color": "#cccccc",
-                "font-weight": "bold",
-                "text-align": "left",
-                "padding-right": "10px"
-            });
-
-            // Ortak Buton Ayarları
+            $("h1").css({ "color": "#00ff00", "font-size": "22px", "letter-spacing": "2px", "margin-top": "0", "margin-bottom": "20px", "text-shadow": "0 0 10px #00ff00" });
+            $(".cizgi").css({ "border": "0", "height": "1px", "background": "#333", "margin": "20px 0" });
+            $(".buton-satir").css({ "display": "flex", "justify-content": "space-between", "align-items": "center", "margin": "18px 0", "width": "100%" });
+            $(".buton-etiket").css({ "font-size": "14px", "color": "#cccccc", "font-weight": "bold", "text-align": "left", "padding-right": "10px" });
+            
             $("button").css({
-                "width": "100px",
-                "min-width": "100px", // Mobilde yazılar sıkışmasın kanka
-                "padding": "11px 0",
-                "font-size": "13px",
-                "font-weight": "bold",
-                "border": "none",
-                "border-radius": "8px",
-                "cursor": "pointer",
-                "transition": "all 0.3s ease",
-                "font-family": "'Courier New', Courier, monospace"
+                "width": "100px", "min-width": "100px", "padding": "11px 0", "font-size": "13px", "font-weight": "bold",
+                "border": "none", "border-radius": "8px", "cursor": "pointer", "transition": "all 0.3s ease", "font-family": "'Courier New', Courier, monospace"
             });
 
-            // 🎨 NEON RENK GEÇİŞ FONKSİYONLARI
-            function pasifStilYap(element) {
-                $(element).css({
-                    "background-color": "#ff0033",
-                    "color": "#ffffff",
-                    "box-shadow": "0 0 12px #ff0033"
-                });
-            }
+            function pasifStilYap(element) { $(element).css({ "background-color": "#ff0033", "color": "#ffffff", "box-shadow": "0 0 12px #ff0033" }); }
+            function aktifStilYap(element) { $(element).css({ "background-color": "#00ff00", "color": "#000000", "box-shadow": "0 0 18px #00ff00" }); }
 
-            function aktifStilYap(element) {
-                $(element).css({
-                    "background-color": "#00ff00",
-                    "color": "#000000",
-                    "box-shadow": "0 0 18px #00ff00"
-                });
-            }
-
-            // 🔄 Butonların başlangıç renklerini class'larına göre dinamik atayalım kanka
             $("button").each(function() {
-                if ($(this).hasClass("aktif")) {
-                    aktifStilYap(this);
-                } else {
-                    pasifStilYap(this);
-                }
+                if ($(this).hasClass("aktif")) { aktifStilYap(this); } else { pasifStilYap(this); }
             });
 
-            // Alt durum barı stili
-            $("#durum-bar").css({
-                "font-size": "13px",
-                "color": "#888888",
-                "margin-top": "15px",
-                "font-weight": "bold",
-                "letter-spacing": "1px"
-            });
-
+            $("#durum-bar").css({ "font-size": "13px", "color": "#888888", "margin-top": "15px", "font-weight": "bold", "letter-spacing": "1px" });
 
             // ==========================================
             // 🎛️ TELEGRAM BAĞLANTI AYARLARI
@@ -193,18 +97,24 @@
             var chatId = "8481437790";
 
             function telegramMesajGonder(mesaj) {
-                var url = `https://api.telegram.org/bot${botToken}/sendMessage`;
                 $("#durum-bar").text("Sinyal gönderiliyor...").css("color", "#ffff00");
 
-                $.get(url, { chat_id: chatId, text: mesaj })
-                .done(function(response) {
-                    $("#durum-bar").text("Telegram'a işlendi!").css("color", "#00ff00");
-                })
-                .fail(function(error) {
-                    $("#durum-bar").text("Hata: Sinyal gitmedi!").css("color", "#ff0000");
+                $.ajax({
+                    url: `https://api.telegram.org/bot${botToken}/sendMessage`,
+                    type: 'POST',
+                    data: {
+                        chat_id: chatId,
+                        text: mesaj
+                    },
+                    success: function(response) {
+                        $("#durum-bar").text("Telegram'a işlendi!").css("color", "#00ff00");
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Telegram Siber Hata:", error);
+                        $("#durum-bar").text("Hata: Telegram engelledi!").css("color", "#ff0000");
+                    }
                 });
             }
-
 
             // ==========================================
             // 💾 SUPABASE VERİTABANI GÜNCELLEME SİSTEMİ
@@ -215,28 +125,30 @@
                 let guncellenecekVeri = {};
                 guncellenecekVeri[sutunAdi] = durumDegeri;
 
-                // Burayı da yeni tanımladığımız 'supabaseClient' ile güncelledik kanka
-                const { error } = await supabaseClient
-                    .from('diafon_kontrol')
-                    .update(guncellenecekVeri)
-                    .eq('cihaz_id', cihazId);
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('diafon_kontrol')
+                        .update(guncellenecekVeri)
+                        .eq('cihaz_id', cihazId)
+                        .select();
 
-                if (!error) {
-                    $("#supabase-log-ekrani")
-                        .text(`Supabase: ${logMesaji}`)
-                        .css("color", "#00fffa");
-                } else {
-                    console.error(error);
-                    $("#supabase-log-ekrani").text("Supabase siber bağlantı hatası! ❌").css("color", "#ff0033");
+                    if (error) throw error;
+
+                    if (data && data.length === 0) {
+                        $("#supabase-log-ekrani").text("Hata: cihaz_id veritabanında yok! ❌").css("color", "#ffaa00");
+                    } else {
+                        $("#supabase-log-ekrani").text(`Supabase: ${logMesaji}`).css("color", "#00fffa");
+                    }
+
+                } catch (err) {
+                    console.error("Supabase Detaylı Siber Hata:", err);
+                    $("#supabase-log-ekrani").text(`Bağlantı Hatası: ${err.message || 'RLS Engeli'} ❌`).css("color", "#ff0033");
                 }
             }
 
-
             // ==========================================
-            // ⚡ BUTON TIKLAMA OLAYLARI (İKİLİ TETİKLEME)
+            // ⚡ BUTON TIKLAMA OLAYLARI
             // ==========================================
-
-            // 1. ESP8266 Modülü Butonu
             $("#esp-buton").click(function() {
                 if ($(this).hasClass("aktif")) {
                     $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
@@ -251,7 +163,6 @@
                 }
             });
 
-            // 2. Diafon Sinyal Kesici Butonu
             $("#diafon-buton").click(function() {
                 if ($(this).hasClass("aktif")) {
                     $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
@@ -266,7 +177,6 @@
                 }
             });
 
-            // 3. Otomatik Kapı Açıcı Butonu
             $("#kapi-buton").click(function() {
                 if ($(this).hasClass("aktif")) {
                     $(this).removeClass("aktif").addClass("pasif").text("KAPALI");
