@@ -10,22 +10,22 @@
 <body>
 
     <div id="panel-container">
-        <h1>CİHAN DIAFON KONTROL</h1>
+        <h1>DIAFON KONTROL PANELİ</h1>
         <hr class="cizgi">
 
         <div class="buton-satir">
             <span class="buton-etiket">ESP8266 Modülü</span>
-            <button id="esp-buton" class="pasif">KAPALI</button>
+            <button id="esp-buton" class="pasif" data-col="esp_aktif">KAPALI</button>
         </div>
 
         <div class="buton-satir">
-            <span class="buton-etiket">Diafon Sinyal Kesici</span>
-            <button id="diafon-buton" class="pasif">KAPALI</button>
+            <span class="buton-etiket">Diafon Sinyal</span>
+            <button id="diafon-buton" class="pasif" data-col="kesici_aktif">KAPALI</button>
         </div>
 
         <div class="buton-satir">
-            <span class="buton-etiket">Otomatik Kapı Açıcı</span>
-            <button id="kapi-buton" class="pasif">KAPALI</button>
+            <span class="buton-etiket">Otomatik Kapı</span>
+            <button id="kapi-buton" class="pasif" data-col="kapi_aktif">KAPALI</button>
         </div>
 
         <hr class="cizgi">
@@ -33,118 +33,87 @@
     </div>
 
     <div id="supabase-log-ekrani">
-        ⚡ Supabase Canlı Veri Akışı Bekleniyor...
+        ⚡ Cihaz Bağlantısı Bekleniyor...
     </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
-        // ==========================================
-        // 🔐 FRANKFURT BAĞLANTI AYARLARI (GÜNCELLENDİ)
-        // ==========================================
+        // BAĞLANTI AYARLARI
         const SUPABASE_URL = "https://tltekqwfkqaqlmmbzsmw.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_tEUn4TkI3Pc4zy8UwrqjIg_aplGStsz"; 
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const cihazId = "cihan_merkez_diafon";
+        
+        // ÖNEMLİ: Bu değişkeni Android veya ESP'den gelen ID'ye göre dinamik yapabilirsin
+        const CIHAZ_ID = "cihan_merkez_diafon"; 
 
         $(document).ready(function() {
             // CSS Tasarımı
-            // SAYFA YÜKLENDİĞİNDE VERİYİ ÇEK (Eklenecek Kısım)
+            applyStyles();
+
+            // 1. İLK VERİ ÇEKME
+            fetchInitialData();
+
+            // 2. REALTIME DİNLEYİCİ (Sadece bu cihazı izle)
             supabaseClient
+                .channel('room-' + CIHAZ_ID)
+                .on('postgres_changes', { 
+                    event: 'UPDATE', 
+                    schema: 'public', 
+                    table: 'diafon_kontrol',
+                    filter: `cihaz_id=eq.${CIHAZ_ID}` 
+                }, payload => {
+                    updateUI(payload.new);
+                })
+                .subscribe();
+
+            // BUTON KLİK OLAYLARI
+            $("button").click(function() {
+                const col = $(this).data("col");
+                const isActive = $(this).hasClass("pasif");
+                supabaseGuncelle(col, isActive);
+            });
+        });
+
+        async function fetchInitialData() {
+            const { data, error } = await supabaseClient
                 .from('diafon_kontrol')
                 .select('*')
-                .eq('cihaz_id', cihazId)
-                .single()
-                .then(({ data, error }) => {
-                    if (data) {
-                        setStyle("#esp-buton", data.esp_aktif);
-                        setStyle("#diafon-buton", data.kesici_aktif);
-                        setStyle("#kapi-buton", data.kapi_aktif);
-                        $("#durum-bar").text("Sistem durumu yüklendi!");
-                    }
-                });
-            $("body").css({ "background-color": "#0d0d0d", "color": "#ffffff", "font-family": "'Courier New', Courier, monospace", "display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "center", "min-height": "100vh", "margin": "0", "padding": "20px", "box-sizing": "border-box" });
-            $("#panel-container").css({ "background-color": "#1a1a1a", "padding": "30px", "border-radius": "15px", "box-shadow": "0 0 25px #00ff00", "width": "100%", "max-width": "400px", "text-align": "center", "border": "1px solid #333" });
-            $("#supabase-log-ekrani").css({ "background-color": "#111111", "color": "#00fffa", "padding": "15px", "border-radius": "10px", "box-shadow": "0 0 20px #00fffa", "width": "100%", "max-width": "400px", "margin-top": "25px", "text-align": "center", "font-size": "13px", "font-weight": "bold", "border": "1px solid #222" });
-            $("h1").css({ "color": "#00ff00", "font-size": "22px", "margin-bottom": "20px", "text-shadow": "0 0 10px #00ff00" });
-            $(".buton-satir").css({ "display": "flex", "justify-content": "space-between", "align-items": "center", "margin": "18px 0" });
-            $("button").css({ "width": "100px", "padding": "11px 0", "font-weight": "bold", "border": "none", "border-radius": "8px", "cursor": "pointer" });
+                .eq('cihaz_id', CIHAZ_ID)
+                .single();
 
-            function setStyle(el, active) {
-                if(active) $(el).css({"background-color": "#00ff00", "color": "#000", "box-shadow": "0 0 18px #00ff00"}).text("AÇIK").removeClass("pasif").addClass("aktif");
-                else $(el).css({"background-color": "#ff0033", "color": "#fff", "box-shadow": "0 0 12px #ff0033"}).text("KAPALI").removeClass("aktif").addClass("pasif");
-            }
+            if (data) updateUI(data);
+        }
 
-            // Başlangıçta pasif ayarla
-            $("button").each(function() { setStyle(this, false); });
+        function updateUI(data) {
+            setStyle("#esp-buton", data.esp_aktif);
+            setStyle("#diafon-buton", data.kesici_aktif);
+            setStyle("#kapi-buton", data.kapi_aktif);
+            $("#durum-bar").text("Senkronize edildi: " + CIHAZ_ID);
+        }
 
-            // Telegram
-            function telegramMesajGonder(msg) {
-                $("#durum-bar").text("Sinyal gönderiliyor...");
-                $.ajax({
-                    url: `https://api.telegram.org/bot8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA/sendMessage`,
-                    type: 'POST',
-                    data: { chat_id: "8481437790", text: msg },
-                    success: () => $("#durum-bar").text("Telegram OK!").css("color", "#00ff00"),
-                    error: () => $("#durum-bar").text("Telegram Hata!").css("color", "#ff0000")
-                });
-            }
+        function setStyle(el, active) {
+            if(active) $(el).css({"background-color": "#00ff00", "color": "#000"}).text("AÇIK").removeClass("pasif").addClass("aktif");
+            else $(el).css({"background-color": "#ff0033", "color": "#fff"}).text("KAPALI").removeClass("aktif").addClass("pasif");
+        }
 
-            // Supabase
-            async function supabaseGuncelle(col, val, msg) {
-                $("#supabase-log-ekrani").text("Supabase eşitleniyor...").css("color", "#ffff00");
-                const { error } = await supabaseClient
-                    .from('diafon_kontrol')
-                    .update({ [col]: val })
-                    .eq('cihaz_id', cihazId);
+        async function supabaseGuncelle(col, val) {
+            $("#supabase-log-ekrani").text("Güncelleniyor...").css("color", "#ffff00");
+            const { error } = await supabaseClient
+                .from('diafon_kontrol')
+                .update({ [col]: val })
+                .eq('cihaz_id', CIHAZ_ID);
 
-                if (error) {
-                    console.error(error);
-                    $("#supabase-log-ekrani").text("Supabase Hata: " + error.message).css("color", "#ff0000");
-                } else {
-                    $("#supabase-log-ekrani").text("Supabase: " + msg).css("color", "#00fffa");
-                }
-            }
+            if (error) $("#supabase-log-ekrani").text("Hata: " + error.message).css("color", "#ff0000");
+            else $("#supabase-log-ekrani").text("Başarılı!").css("color", "#00fffa");
+        }
 
-            // Butonlar
-            $("#esp-buton").click(function() {
-                const isActive = $(this).hasClass("pasif");
-                setStyle(this, isActive);
-                telegramMesajGonder("Komut: ESP " + (isActive ? "Aktif" : "Pasif"));
-                supabaseGuncelle("esp_aktif", isActive, "ESP " + (isActive ? "Açıldı" : "Kapandı"));
-            });
-
-            $("#diafon-buton").click(function() {
-                const isActive = $(this).hasClass("pasif");
-                setStyle(this, isActive);
-                telegramMesajGonder("Komut: Diafon " + (isActive ? "Aktif" : "Pasif"));
-                supabaseGuncelle("kesici_aktif", isActive, "Diafon " + (isActive ? "Açıldı" : "Kapandı"));
-            });
-
-            $("#kapi-buton").click(function() {
-                const isActive = $(this).hasClass("pasif");
-                setStyle(this, isActive);
-                telegramMesajGonder("Komut: Kapi " + (isActive ? "Aktif" : "Pasif"));
-                supabaseGuncelle("kapi_aktif", isActive, "Kapi " + (isActive ? "Açıldı" : "Kapandı"));
-            });
-            // Realtime Aboneliği
-supabaseClient
-  .channel('diafon_kontrol_channel')
-  .on('postgres_changes', { 
-    event: 'UPDATE', 
-    schema: 'public', 
-    table: 'diafon_kontrol',
-    filter: 'cihaz_id=eq.' + cihazId 
-  }, payload => {
-    console.log('Değişim algılandı:', payload.new);
-    // Gelen yeni veriye göre butonları güncelle
-    setStyle("#esp-buton", payload.new.esp_aktif);
-    setStyle("#diafon-buton", payload.new.kesici_aktif);
-    setStyle("#kapi-buton", payload.new.kapi_aktif);
-    $("#supabase-log-ekrani").text("Sistem güncellendi!").css("color", "#00ff00");
-  })
-  .subscribe();
-        });
+        function applyStyles() {
+            $("body").css({ "background-color": "#0d0d0d", "color": "#ffffff", "font-family": "monospace", "display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "center", "min-height": "100vh", "margin": "0" });
+            $("#panel-container").css({ "background-color": "#1a1a1a", "padding": "30px", "border-radius": "15px", "box-shadow": "0 0 25px #00ff00", "width": "90%", "max-width": "400px", "text-align": "center" });
+            $("#supabase-log-ekrani").css({ "background-color": "#111", "color": "#00fffa", "padding": "10px", "margin-top": "20px", "border-radius": "5px", "font-size": "12px" });
+            $(".buton-satir").css({ "display": "flex", "justify-content": "space-between", "align-items": "center", "margin": "15px 0" });
+            $("button").css({ "width": "100px", "padding": "10px", "cursor": "pointer", "border": "none", "border-radius": "5px" });
+        }
     </script>
 </body>
 </html>
