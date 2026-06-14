@@ -6,6 +6,7 @@
     <title>Cihan Diafon Otomasyon Paneli - FCM Destekli</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 </head>
@@ -44,7 +45,9 @@
         <div id="fcm-durum" style="font-size:11px; color:#ffaa00; margin-top:10px;">📡 FCM Bağlantısı kuruluyor...</div>
     </div>
 
-    <div id="supabase-log-ekrani">⚡ Supabase Bağlantısı Kuruluyor...</div>
+    <div id="supabase-log-ekrani">
+        ⚡ Supabase Bağlantısı Kuruluyor...
+    </div>
 
     <script>
         // ============ 🔐 AYARLAR ============
@@ -63,7 +66,7 @@
         };
         const VAPID_KEY = "BJcLJKf_jqJPoZxjSGFO4TjsxfDmk8Einp4e-XrruN2oIqKcMnBCmxqGuhHgRTPzItcog3eZDynrOu_76V0PqKI";
 
-        // ============ 🔥 GÖMÜLÜ SERVICE WORKER ============
+        // ============ 🔥 GÖMÜLÜ SERVICE WORKER (BLOB YÖNTEMİ) ============
         const swScript = `
             importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
             importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
@@ -71,7 +74,7 @@
             const messaging = firebase.messaging();
             messaging.onBackgroundMessage((payload) => {
                 self.registration.showNotification('📞 Cihan Diafon', {
-                    body: payload.data?.mesaj || "Yeni mesaj!",
+                    body: payload.data?.mesaj || "Yeni mesaj var!",
                     icon: '/favicon.ico'
                 });
             });
@@ -79,38 +82,46 @@
         const blob = new Blob([swScript], { type: 'application/javascript' });
         const swUrl = URL.createObjectURL(blob);
 
+        // Firebase'i başlat
         firebase.initializeApp(firebaseConfig);
         const messaging = firebase.messaging();
 
-        // Service Worker'ı gömülü olarak başlat
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register(swUrl).catch(err => console.log('SW hatası:', err));
+        async function requestFCMToken() {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    const token = await messaging.getToken({ vapidKey: VAPID_KEY });
+                    if (token) {
+                        $("#fcm-durum").html(`✅ FCM Aktif`);
+                        await supabaseClient.from('diafon_kontrol').update({ fcm_token: token }).eq('cihaz_id', cihazId);
+                    }
+                }
+            } catch (error) { console.error("FCM hatası:", error); }
         }
 
-        // ============ 🚀 UYGULAMA MANTIĞI ============
+        messaging.onMessage((payload) => {
+            const gelenMesaj = payload.data?.mesaj || "Yeni mesaj geldi!";
+            $("#fcm-mesaj-icerik").html(`<div style="color:#ffffff;">${gelenMesaj}</div>`);
+            $("#durum-bar").text(`📨 ${gelenMesaj}`);
+        });
+
+        // Service Worker'ı gömülü olarak kaydet
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl).then(() => console.log('SW Gömülü Olarak Kayıt Edildi.'));
+        }
+
         $(document).ready(function() {
-            // CSS Tasarımı
+            // CSS Tasarımı (Değişmedi)
             $("body").css({ "background-color": "#0d0d0d", "color": "#ffffff", "font-family": "'Courier New', Courier, monospace", "display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "center", "min-height": "100vh", "margin": "0", "padding": "20px" });
             $("#panel-container").css({ "background-color": "#1a1a1a", "padding": "30px", "border-radius": "15px", "box-shadow": "0 0 25px #00ff00", "width": "100%", "max-width": "400px", "text-align": "center", "border": "1px solid #333" });
             $("#supabase-log-ekrani").css({ "background-color": "#111111", "color": "#00fffa", "padding": "15px", "border-radius": "10px", "box-shadow": "0 0 20px #00fffa", "width": "100%", "max-width": "400px", "margin-top": "25px", "text-align": "center", "font-size": "13px", "font-weight": "bold", "border": "1px solid #222" });
-            $("button").css({ "width": "100px", "padding": "11px 0", "font-weight": "bold", "border": "none", "border-radius": "8px", "cursor": "pointer" });
-
+            
             function setStyle(el, active) {
                 if(active) $(el).css({"background-color": "#00ff00", "color": "#000", "box-shadow": "0 0 18px #00ff00"}).text("AÇIK").removeClass("pasif").addClass("aktif");
                 else $(el).css({"background-color": "#ff0033", "color": "#fff", "box-shadow": "0 0 12px #ff0033"}).text("KAPALI").removeClass("aktif").addClass("pasif");
             }
 
-            async function supabaseGuncelle(col, val, msg) {
-                await supabaseClient.from('diafon_kontrol').update({ [col]: val }).eq('cihaz_id', cihazId);
-                $("#supabase-log-ekrani").text("Supabase: " + msg);
-            }
-
-            // Buton Olayları
-            $("#esp-buton").click(() => { let active = $("#esp-buton").hasClass("pasif"); setStyle("#esp-buton", active); supabaseGuncelle("esp_aktif", active, "ESP " + (active ? "Açıldı" : "Kapandı")); });
-            $("#diafon-buton").click(() => { let active = $("#diafon-buton").hasClass("pasif"); setStyle("#diafon-buton", active); supabaseGuncelle("kesici_aktif", active, "Diafon " + (active ? "Açıldı" : "Kapandı")); });
-            $("#kapi-buton").click(() => { let active = $("#kapi-buton").hasClass("pasif"); setStyle("#kapi-buton", active); supabaseGuncelle("kapi_aktif", active, "Kapı " + (active ? "Açıldı" : "Kapandı")); });
-
-            // İlk veriyi çek
+            // Başlangıç verisi
             supabaseClient.from('diafon_kontrol').select('*').eq('cihaz_id', cihazId).single().then(({ data }) => {
                 if (data) {
                     setStyle("#esp-buton", data.esp_aktif);
@@ -119,18 +130,25 @@
                 }
             });
 
-            // Realtime Abonelik
+            // Buton tıklamalar
+            async function supabaseGuncelle(col, val, msg) {
+                await supabaseClient.from('diafon_kontrol').update({ [col]: val }).eq('cihaz_id', cihazId);
+                $("#supabase-log-ekrani").text("Supabase: " + msg);
+            }
+
+            $("#esp-buton").click(() => { let active = $("#esp-buton").hasClass("pasif"); setStyle("#esp-buton", active); supabaseGuncelle("esp_aktif", active, "ESP " + (active ? "Açıldı" : "Kapandı")); });
+            $("#diafon-buton").click(() => { let active = $("#diafon-buton").hasClass("pasif"); setStyle("#diafon-buton", active); supabaseGuncelle("kesici_aktif", active, "Diafon " + (active ? "Açıldı" : "Kapandı")); });
+            $("#kapi-buton").click(() => { let active = $("#kapi-buton").hasClass("pasif"); setStyle("#kapi-buton", active); supabaseGuncelle("kapi_aktif", active, "Kapı " + (active ? "Açıldı" : "Kapandı")); });
+
+            requestFCMToken();
+
             supabaseClient.channel('diafon_kontrol_channel')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'diafon_kontrol', filter: 'cihaz_id=eq.' + cihazId }, payload => {
-                const y = payload.new;
-                setStyle("#esp-buton", y.esp_aktif);
-                setStyle("#diafon-buton", y.kesici_aktif);
-                setStyle("#kapi-buton", y.kapi_aktif);
-                if(y.son_mesaj) { $("#fcm-mesaj-icerik").text(y.son_mesaj); $("#durum-bar").text(y.son_mesaj); }
+                const yeniVeri = payload.new;
+                if (yeniVeri.esp_aktif !== undefined) setStyle("#esp-buton", yeniVeri.esp_aktif);
+                if (yeniVeri.kesici_aktif !== undefined) setStyle("#diafon-buton", yeniVeri.kesici_aktif);
+                if (yeniVeri.kapi_aktif !== undefined) setStyle("#kapi-buton", yeniVeri.kapi_aktif);
             }).subscribe();
-
-            // FCM Token İsteme
-            Notification.requestPermission().then(p => { if(p==='granted') messaging.getToken({vapidKey: VAPID_KEY}).then(t => supabaseClient.from('diafon_kontrol').update({fcm_token: t}).eq('cihaz_id', cihazId)).then(() => $("#fcm-durum").text("✅ FCM Aktif")); });
         });
     </script>
 </body>
