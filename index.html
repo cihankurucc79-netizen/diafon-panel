@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cihan Diafon Otomasyon Paneli</title>
+    <title>Cihan Diafon Otomasyon Paneli - FCM Destekli</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -13,22 +13,46 @@
 
     <div id="panel-container">
         <h1>CİHAN DIAFON KONTROL</h1>
-        <div class="buton-satir"><span class="buton-etiket">ESP8266 Modülü</span><button id="esp-buton" class="pasif">KAPALI</button></div>
-        <div class="buton-satir"><span class="buton-etiket">Diafon Sinyal Kesici</span><button id="diafon-buton" class="pasif">KAPALI</button></div>
-        <div class="buton-satir"><span class="buton-etiket">Otomatik Kapı Açıcı</span><button id="kapi-buton" class="pasif">KAPALI</button></div>
-        <div id="fcm-mesaj-icerik" style="background:#000; padding:10px; margin-top:10px; border-left:4px solid #00ff00;">Bekleniyor...</div>
-        <div id="durum-bar" style="margin-top:10px;">Sistem hazır kanka.</div>
-        <div id="fcm-durum" style="font-size:11px; color:#ffaa00; margin-top:10px;">📡 FCM Bağlanıyor...</div>
+        <hr class="cizgi">
+
+        <div class="buton-satir">
+            <span class="buton-etiket">ESP8266 Modülü</span>
+            <button id="esp-buton" class="pasif">KAPALI</button>
+        </div>
+
+        <div class="buton-satir">
+            <span class="buton-etiket">Diafon Sinyal Kesici</span>
+            <button id="diafon-buton" class="pasif">KAPALI</button>
+        </div>
+
+        <div class="buton-satir">
+            <span class="buton-etiket">Otomatik Kapı Açıcı</span>
+            <button id="kapi-buton" class="pasif">KAPALI</button>
+        </div>
+
+        <hr class="cizgi">
+        
+        <div id="fcm-mesaj-alani">
+            <div style="font-size:12px; color:#00ff00; margin-bottom:5px;">📨 ESP'DEN GELEN SON MESAJ:</div>
+            <div id="fcm-mesaj-icerik" style="background:#000; padding:12px; border-radius:8px; min-height:50px; word-wrap:break-word; border-left:4px solid #00ff00; text-align:left;">
+                Bekleniyor...
+            </div>
+        </div>
+
+        <hr class="cizgi">
+        <div id="durum-bar">Sistem hazır kanka.</div>
+        <div id="fcm-durum" style="font-size:11px; color:#ffaa00; margin-top:10px;">📡 FCM Bağlantısı kuruluyor...</div>
     </div>
-    <div id="supabase-log-ekrani" style="margin-top:20px;">⚡ Supabase Hazır.</div>
+
+    <div id="supabase-log-ekrani">⚡ Supabase Bağlantısı Kuruluyor...</div>
 
     <script>
+        // ============ 🔐 AYARLAR ============
         const SUPABASE_URL = "https://tltekqwfkqaqlmmbzsmw.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_tEUn4TkI3Pc4zy8UwrqjIg_aplGStsz"; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const cihazId = "cihan_merkez_diafon";
-        const TELEGRAM_BOT_TOKEN = "7626992520:AAH8N5F6o_mP8G-o3eT17l5zXz6x86_N31Y";
-        const TELEGRAM_CHAT_ID = "6365922752";
+
         const firebaseConfig = {
             apiKey: "AIzaSyCs4s6f3bRhc8lotVWcEKSUAEH_OQFWR1g",
             authDomain: "diafon-tetik12.firebaseapp.com",
@@ -37,55 +61,76 @@
             messagingSenderId: "534092717765",
             appId: "1:534092717765:web:695a90bde7071e207d1aac"
         };
+        const VAPID_KEY = "BJcLJKf_jqJPoZxjSGFO4TjsxfDmk8Einp4e-XrruN2oIqKcMnBCmxqGuhHgRTPzItcog3eZDynrOu_76V0PqKI";
 
-        // --- GÖMÜLÜ FCM SERVICE WORKER ---
-        const swCode = `
+        // ============ 🔥 GÖMÜLÜ SERVICE WORKER ============
+        const swScript = `
             importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
             importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
             firebase.initializeApp(${JSON.stringify(firebaseConfig)});
             const messaging = firebase.messaging();
-            messaging.onBackgroundMessage((p) => {
-                self.registration.showNotification('📞 Cihan Diafon', { body: p.data?.mesaj || "Yeni mesaj!" });
+            messaging.onBackgroundMessage((payload) => {
+                self.registration.showNotification('📞 Cihan Diafon', {
+                    body: payload.data?.mesaj || "Yeni mesaj!",
+                    icon: '/favicon.ico'
+                });
             });
         `;
-        const swUrl = URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' }));
+        const blob = new Blob([swScript], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
 
         firebase.initializeApp(firebaseConfig);
         const messaging = firebase.messaging();
 
-        function telegramGonder(msg) {
-            fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(msg)}`);
+        // Service Worker'ı gömülü olarak başlat
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl).catch(err => console.log('SW hatası:', err));
         }
 
-        async function supabaseGuncelle(col, val, ad) {
-            const aktif = val ? "AÇIK" : "KAPALI";
-            await supabaseClient.from('diafon_kontrol').update({ [col]: val, son_mesaj: ad + ": " + aktif }).eq('cihaz_id', cihazId);
-            telegramGonder("📢 " + ad + " durumu: " + aktif);
-        }
+        // ============ 🚀 UYGULAMA MANTIĞI ============
+        $(document).ready(function() {
+            // CSS Tasarımı
+            $("body").css({ "background-color": "#0d0d0d", "color": "#ffffff", "font-family": "'Courier New', Courier, monospace", "display": "flex", "flex-direction": "column", "justify-content": "center", "align-items": "center", "min-height": "100vh", "margin": "0", "padding": "20px" });
+            $("#panel-container").css({ "background-color": "#1a1a1a", "padding": "30px", "border-radius": "15px", "box-shadow": "0 0 25px #00ff00", "width": "100%", "max-width": "400px", "text-align": "center", "border": "1px solid #333" });
+            $("#supabase-log-ekrani").css({ "background-color": "#111111", "color": "#00fffa", "padding": "15px", "border-radius": "10px", "box-shadow": "0 0 20px #00fffa", "width": "100%", "max-width": "400px", "margin-top": "25px", "text-align": "center", "font-size": "13px", "font-weight": "bold", "border": "1px solid #222" });
+            $("button").css({ "width": "100px", "padding": "11px 0", "font-weight": "bold", "border": "none", "border-radius": "8px", "cursor": "pointer" });
 
-        $(document).ready(async function() {
-            if ('serviceWorker' in navigator) navigator.serviceWorker.register(swUrl);
-            
-            // FCM İzin
-            try {
-                const p = await Notification.requestPermission();
-                if (p === 'granted') {
-                    const t = await messaging.getToken({ vapidKey: "BJcLJKf_jqJPoZxjSGFO4TjsxfDmk8Einp4e-XrruN2oIqKcMnBCmxqGuhHgRTPzItcog3eZDynrOu_76V0PqKI" });
-                    await supabaseClient.from('diafon_kontrol').update({ fcm_token: t }).eq('cihaz_id', cihazId);
-                    $("#fcm-durum").text("✅ FCM Aktif");
+            function setStyle(el, active) {
+                if(active) $(el).css({"background-color": "#00ff00", "color": "#000", "box-shadow": "0 0 18px #00ff00"}).text("AÇIK").removeClass("pasif").addClass("aktif");
+                else $(el).css({"background-color": "#ff0033", "color": "#fff", "box-shadow": "0 0 12px #ff0033"}).text("KAPALI").removeClass("aktif").addClass("pasif");
+            }
+
+            async function supabaseGuncelle(col, val, msg) {
+                await supabaseClient.from('diafon_kontrol').update({ [col]: val }).eq('cihaz_id', cihazId);
+                $("#supabase-log-ekrani").text("Supabase: " + msg);
+            }
+
+            // Buton Olayları
+            $("#esp-buton").click(() => { let active = $("#esp-buton").hasClass("pasif"); setStyle("#esp-buton", active); supabaseGuncelle("esp_aktif", active, "ESP " + (active ? "Açıldı" : "Kapandı")); });
+            $("#diafon-buton").click(() => { let active = $("#diafon-buton").hasClass("pasif"); setStyle("#diafon-buton", active); supabaseGuncelle("kesici_aktif", active, "Diafon " + (active ? "Açıldı" : "Kapandı")); });
+            $("#kapi-buton").click(() => { let active = $("#kapi-buton").hasClass("pasif"); setStyle("#kapi-buton", active); supabaseGuncelle("kapi_aktif", active, "Kapı " + (active ? "Açıldı" : "Kapandı")); });
+
+            // İlk veriyi çek
+            supabaseClient.from('diafon_kontrol').select('*').eq('cihaz_id', cihazId).single().then(({ data }) => {
+                if (data) {
+                    setStyle("#esp-buton", data.esp_aktif);
+                    setStyle("#diafon-buton", data.kesici_aktif);
+                    setStyle("#kapi-buton", data.kapi_aktif);
                 }
-            } catch(e) {}
+            });
 
-            // Butonlar
-            $("#esp-buton").click(() => supabaseGuncelle("esp_aktif", $("#esp-buton").hasClass("pasif"), "ESP8266"));
-            $("#diafon-buton").click(() => supabaseGuncelle("kesici_aktif", $("#diafon-buton").hasClass("pasif"), "Diafon Kesici"));
-            $("#kapi-buton").click(() => supabaseGuncelle("kapi_aktif", $("#kapi-buton").hasClass("pasif"), "Otomatik Kapı"));
-
-            // Realtime
-            supabaseClient.channel('c').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'diafon_kontrol', filter: 'cihaz_id=eq.'+cihazId }, p => {
-                const n = p.new;
-                if(n.son_mesaj) { $("#fcm-mesaj-icerik").text(n.son_mesaj); $("#durum-bar").text(n.son_mesaj); }
+            // Realtime Abonelik
+            supabaseClient.channel('diafon_kontrol_channel')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'diafon_kontrol', filter: 'cihaz_id=eq.' + cihazId }, payload => {
+                const y = payload.new;
+                setStyle("#esp-buton", y.esp_aktif);
+                setStyle("#diafon-buton", y.kesici_aktif);
+                setStyle("#kapi-buton", y.kapi_aktif);
+                if(y.son_mesaj) { $("#fcm-mesaj-icerik").text(y.son_mesaj); $("#durum-bar").text(y.son_mesaj); }
             }).subscribe();
+
+            // FCM Token İsteme
+            Notification.requestPermission().then(p => { if(p==='granted') messaging.getToken({vapidKey: VAPID_KEY}).then(t => supabaseClient.from('diafon_kontrol').update({fcm_token: t}).eq('cihaz_id', cihazId)).then(() => $("#fcm-durum").text("✅ FCM Aktif")); });
         });
     </script>
 </body>
