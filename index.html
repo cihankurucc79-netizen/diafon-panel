@@ -161,16 +161,18 @@
         const messaging = firebase.messaging();
 
         // Service Worker Kaydı - DÜZELTİLDİ (./ ile)
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./firebase-messaging-sw.js')
-                .then((registration) => {
-                    console.log('✅ Service Worker başarıyla yüklendi:', registration.scope);
-                })
-                .catch(err => {
-                    console.error('❌ Service Worker hatası:', err);
-                    $("#fcm-durum").text("⚠️ Service Worker hatası, ama bildirimler çalışabilir.");
-                });
-        }
+        // Service Worker Kaydı (DÜZELTİLMİŞ VERSİYON)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./firebase-messaging-sw.js')
+        .then((registration) => {
+            console.log('✅ Service Worker başarıyla yüklendi:', registration.scope);
+            $("#fcm-durum").text("✅ Service Worker hazır, bildirimler aktif.");
+        })
+        .catch(err => {
+            console.error('❌ Service Worker hatası:', err);
+            $("#fcm-durum").text("⚠️ Service Worker hatası, lütfen sayfayı yenileyin.");
+        });
+}
 
         // Ön planda mesaj gelince
         messaging.onMessage((payload) => {
