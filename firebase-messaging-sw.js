@@ -13,10 +13,12 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-    let messageBody = payload.data?.mesaj || payload.notification?.body || "Bildirim var!";
-    self.registration.showNotification('📞 Cihan Diafon', {
-        body: messageBody,
-        icon: '/favicon.ico',
-        vibrate: [200, 100, 200]
-    });
+    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+    const notificationTitle = '📞 Cihan Diafon';
+    const notificationOptions = {
+        body: payload.data?.mesaj || payload.notification?.body || "Yeni bir bildirim!",
+        icon: '/favicon.ico'
+    };
+
+    self.registration.showNotification(notificationTitle, notificationOptions);
 });
