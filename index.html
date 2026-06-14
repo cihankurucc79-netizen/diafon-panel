@@ -33,10 +33,11 @@
     </div>
 
     <div id="supabase-log-ekrani">
-        ⚡ Supabase Canlı Veri Akışı Bekleniyor...
+        ⚡ Supabase Bağlantısı Kuruluyor...
     </div>
 
     <script>
+        // 🔐 Bağlantı Ayarları
         const SUPABASE_URL = "https://tltekqwfkqaqlmmbzsmw.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_tEUn4TkI3Pc4zy8UwrqjIg_aplGStsz"; 
         
@@ -57,28 +58,20 @@
                 else $(el).css({"background-color": "#ff0033", "color": "#fff", "box-shadow": "0 0 12px #ff0033"}).text("KAPALI").removeClass("aktif").addClass("pasif");
             }
 
-            // Sayfa açıldığında durumu çek
+            // Sayfa açıldığında durumu veritabanından al
             supabaseClient.from('diafon_kontrol').select('*').eq('cihaz_id', cihazId).single().then(({ data }) => {
                 if (data) {
                     setStyle("#esp-buton", data.esp_aktif);
                     setStyle("#diafon-buton", data.kesici_aktif);
                     setStyle("#kapi-buton", data.kapi_aktif);
+                    if(data.son_mesaj) $("#durum-bar").text(data.son_mesaj);
                 }
             });
 
-            // Telegram fonksiyonu
-            function telegramMesajGonder(msg) {
-                $.ajax({
-                    url: `https://api.telegram.org/bot8822982581:AAFPn5rSjyXu2XcHkPnV7W2rUzLijYBTNPA/sendMessage`,
-                    type: 'POST',
-                    data: { chat_id: "8481437790", text: msg }
-                });
-            }
-
-            // Supabase güncelleme
+            // Supabase güncelleme fonksiyonu
             async function supabaseGuncelle(col, val, msg) {
-                await supabaseClient.from('diafon_kontrol').update({ [col]: val }).eq('cihaz_id', cihazId);
-                $("#supabase-log-ekrani").text("Supabase: " + msg);
+                const { error } = await supabaseClient.from('diafon_kontrol').update({ [col]: val }).eq('cihaz_id', cihazId);
+                if (!error) $("#supabase-log-ekrani").text("Supabase: " + msg);
             }
 
             // Buton tıklamaları
@@ -100,18 +93,21 @@
                 supabaseGuncelle("kapi_aktif", active, "Kapi " + (active ? "Açıldı" : "Kapandı"));
             });
 
-            // --- REALTIME GÜNCELLEME (BUTONLAR + MESAJ) ---
+            // --- REALTIME ABONELİK (ESP'DEN GELEN MESAJLAR VE BUTON DEĞİŞİMLERİ) ---
             supabaseClient
             .channel('diafon_kontrol_channel')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'diafon_kontrol', filter: 'cihaz_id=eq.' + cihazId }, payload => {
-                // Butonları güncelle
-                setStyle("#esp-buton", payload.new.esp_aktif);
-                setStyle("#diafon-buton", payload.new.kesici_aktif);
-                setStyle("#kapi-buton", payload.new.kapi_aktif);
+                const yeniVeri = payload.new;
                 
-                // MESAJ GELDİĞİNDE BURASI TETİKLENİR
-                if(payload.new.son_mesaj) {
-                    $("#durum-bar").text(payload.new.son_mesaj).css("color", "#00fffa");
+                // 1. Butonları güncelle
+                if (yeniVeri.esp_aktif !== undefined) setStyle("#esp-buton", yeniVeri.esp_aktif);
+                if (yeniVeri.kesici_aktif !== undefined) setStyle("#diafon-buton", yeniVeri.kesici_aktif);
+                if (yeniVeri.kapi_aktif !== undefined) setStyle("#kapi-buton", yeniVeri.kapi_aktif);
+                
+                // 2. Mesaj gelirse durum barını güncelle
+                if(yeniVeri.son_mesaj) {
+                    $("#durum-bar").text(yeniVeri.son_mesaj).css("color", "#00fffa");
+                    $("#supabase-log-ekrani").text("📢 Yeni Mesaj: " + yeniVeri.son_mesaj);
                 }
             })
             .subscribe();
