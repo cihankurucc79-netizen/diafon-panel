@@ -99,11 +99,19 @@
             } catch (error) { console.error("FCM hatası:", error); }
         }
 
-        messaging.onMessage((payload) => {
-            const gelenMesaj = payload.data?.mesaj || "Yeni mesaj geldi!";
-            $("#fcm-mesaj-icerik").html(`<div style="color:#ffffff;">${gelenMesaj}</div>`);
-            $("#durum-bar").text(`📨 ${gelenMesaj}`);
-        });
+        // Kodundaki messaging.onMessage kısmını bununla değiştir
+messaging.onMessage((payload) => {
+    console.log("FCM Mesajı Alındı:", payload); // Bunu kontrol et
+    
+    // Hem data içinde 'mesaj' varsa hem de direkt notification body varsa kontrol et
+    const gelenMesaj = payload.data?.mesaj || payload.notification?.body || "Yeni bir bildirim!";
+    
+    $("#fcm-mesaj-icerik").html(`<div style="color:#ffffff;">${gelenMesaj}</div>`);
+    $("#durum-bar").text(`📨 ${gelenMesaj}`);
+    
+    // İstersen burada otomatik olarak Telegram'a da gönder
+    // telegramGonder("FCM'den geldi: " + gelenMesaj); 
+});
 
         // Service Worker'ı gömülü olarak kaydet
         if ('serviceWorker' in navigator) {
