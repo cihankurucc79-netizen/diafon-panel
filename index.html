@@ -3,100 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cihan Diafon Otomasyon Paneli</title>
+    <title>Cihan Diafon Otomasyon</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    <style>
+        body { background-color: #0d0d0d; color: #fff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        #panel-container { background-color: #1a1a1a; padding: 20px; border-radius: 15px; box-shadow: 0 0 20px #00ff00; width: 100%; max-width: 400px; }
+        button { width: 100px; padding: 10px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; }
+        .aktif { background-color: #00ff00 !important; color: #000; box-shadow: 0 0 10px #00ff00; }
+        .pasif { background-color: #ff0033 !important; color: #fff; }
+        .buton-satir { display: flex; justify-content: space-between; margin: 15px 0; align-items: center; }
+    </style>
 </head>
 <body>
 
-    <div id="panel-container">
-        <h1>CİHAN DIAFON KONTROL</h1>
-        <hr class="cizgi">
-        <div class="buton-satir">
-            <span class="buton-etiket">ESP8266 Modülü</span>
-            <button id="esp-buton" class="pasif">KAPALI</button>
-        </div>
-        <div class="buton-satir">
-            <span class="buton-etiket">Diafon Sinyal Kesici</span>
-            <button id="diafon-buton" class="pasif">KAPALI</button>
-        </div>
-        <div class="buton-satir">
-            <span class="buton-etiket">Otomatik Kapı Açıcı</span>
-            <button id="kapi-buton" class="pasif">KAPALI</button>
-        </div>
-        <hr class="cizgi">
-        <div id="fcm-mesaj-alani">
-            <div id="fcm-mesaj-icerik">Bekleniyor...</div>
-        </div>
-        <div id="durum-bar">Sistem hazır kanka.</div>
-        <div id="fcm-durum">📡 FCM Bağlanıyor...</div>
-    </div>
-    <div id="supabase-log-ekrani">⚡ Supabase Hazır.</div>
+<div id="panel-container">
+    <h1>CİHAN DIAFON KONTROL</h1>
+    <div class="buton-satir"><span>ESP8266 Modülü</span><button id="esp-buton" class="pasif">KAPALI</button></div>
+    <div class="buton-satir"><span>Diafon Sinyal Kesici</span><button id="diafon-buton" class="pasif">KAPALI</button></div>
+    <div class="buton-satir"><span>Otomatik Kapı Açıcı</span><button id="kapi-buton" class="pasif">KAPALI</button></div>
+    <div id="fcm-mesaj-icerik" style="background:#000; padding:10px; border-left:4px solid #00ff00; margin-top:10px;">Bekleniyor...</div>
+    <div id="durum-bar" style="margin-top:10px; font-size:12px;">Sistem hazır kanka.</div>
+    <div id="fcm-durum" style="font-size:11px; color:#ffaa00; margin-top:10px;">📡 FCM Bağlanıyor...</div>
+</div>
+<div id="supabase-log-ekrani" style="margin-top:20px; font-size:12px; color:#00fffa;">⚡ Supabase Hazır.</div>
 
-    <script>
-        // AYARLAR
-        const SUPABASE_URL = "https://tltekqwfkqaqlmmbzsmw.supabase.co"; 
-        const SUPABASE_ANON_KEY = "sb_publishable_tEUn4TkI3Pc4zy8UwrqjIg_aplGStsz"; 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const cihazId = "cihan_merkez_diafon";
-        
-        // TELEGRAM AYARLARI
-        const BOT_TOKEN = "7626992520:AAH8N5F6o_mP8G-o3eT17l5zXz6x86_N31Y";
-        const CHAT_ID = "6365922752";
+<script>
+    const SUPABASE_URL = "https://tltekqwfkqaqlmmbzsmw.supabase.co"; 
+    const SUPABASE_ANON_KEY = "sb_publishable_tEUn4TkI3Pc4zy8UwrqjIg_aplGStsz"; 
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const cihazId = "cihan_merkez_diafon";
+    const firebaseConfig = {
+        apiKey: "AIzaSyCs4s6f3bRhc8lotVWcEKSUAEH_OQFWR1g",
+        authDomain: "diafon-tetik12.firebaseapp.com",
+        projectId: "diafon-tetik12",
+        storageBucket: "diafon-tetik12.firebasestorage.app",
+        messagingSenderId: "534092717765",
+        appId: "1:534092717765:web:695a90bde7071e207d1aac"
+    };
 
-        // Telegram Mesaj Gönder Fonksiyonu
-        function telegramGonder(mesaj) {
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(mesaj)}`;
-            fetch(url).catch(err => console.log("Telegram hatası:", err));
+    // Gömülü SW
+    const swUrl = URL.createObjectURL(new Blob([`
+        importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+        importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
+        firebase.initializeApp(${JSON.stringify(firebaseConfig)});
+        firebase.messaging().onBackgroundMessage(p => self.registration.showNotification('📞 Cihan', { body: p.data?.mesaj }));
+    `], { type: 'application/javascript' }));
+
+    firebase.initializeApp(firebaseConfig);
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register(swUrl);
+
+    function setBtn(id, active) {
+        $(id).text(active ? "AÇIK" : "KAPALI").attr('class', active ? 'aktif' : 'pasif');
+    }
+
+    async function guncelle(col, val, ad) {
+        await supabaseClient.from('diafon_kontrol').update({ [col]: val, son_mesaj: ad + ": " + (val ? "AÇIK" : "KAPALI") }).eq('cihaz_id', cihazId);
+        fetch(`https://api.telegram.org/bot7626992520:AAH8N5F6o_mP8G-o3eT17l5zXz6x86_N31Y/sendMessage?chat_id=6365922752&text=${ad} durumu: ${val ? 'AÇIK' : 'KAPALI'}`);
+    }
+
+    $(document).ready(async function() {
+        // İlk yükleme
+        const { data } = await supabaseClient.from('diafon_kontrol').select('*').eq('cihaz_id', cihazId).single();
+        if(data) {
+            setBtn("#esp-buton", data.esp_aktif);
+            setBtn("#diafon-buton", data.kesici_aktif);
+            setBtn("#kapi-buton", data.kapi_aktif);
         }
 
-        // --- GÖMÜLÜ SERVICE WORKER (Bunu bozmamak için buraya ekledim) ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCs4s6f3bRhc8lotVWcEKSUAEH_OQFWR1g",
-            authDomain: "diafon-tetik12.firebaseapp.com",
-            projectId: "diafon-tetik12",
-            storageBucket: "diafon-tetik12.firebasestorage.app",
-            messagingSenderId: "534092717765",
-            appId: "1:534092717765:web:695a90bde7071e207d1aac"
-        };
-        firebase.initializeApp(firebaseConfig);
+        // Tıklamalar
+        $("#esp-buton").click(() => guncelle("esp_aktif", $("#esp-buton").hasClass("pasif"), "ESP"));
+        $("#diafon-buton").click(() => guncelle("kesici_aktif", $("#diafon-buton").hasClass("pasif"), "Diafon"));
+        $("#kapi-buton").click(() => guncelle("kapi_aktif", $("#kapi-buton").hasClass("pasif"), "Kapı"));
 
-        async function supabaseGuncelle(col, val, cihazAdi) {
-            const durum = val ? "AÇIK" : "KAPALI";
-            const mesaj = `${cihazAdi} durumu: ${durum}`;
-            
-            // Supabase Güncelle
-            await supabaseClient.from('diafon_kontrol').update({ [col]: val, son_mesaj: mesaj }).eq('cihaz_id', cihazId);
-            
-            // Telegram'a Gönder
-            telegramGonder("📢 " + mesaj);
-            
-            $("#supabase-log-ekrani").text("Supabase & Telegram: " + mesaj);
-        }
+        // Realtime
+        supabaseClient.channel('c').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'diafon_kontrol', filter: 'cihaz_id=eq.'+cihazId }, p => {
+            setBtn("#esp-buton", p.new.esp_aktif);
+            setBtn("#diafon-buton", p.new.kesici_aktif);
+            setBtn("#kapi-buton", p.new.kapi_aktif);
+            if(p.new.son_mesaj) { $("#fcm-mesaj-icerik").text(p.new.son_mesaj); $("#durum-bar").text(p.new.son_mesaj); }
+        }).subscribe();
 
-        $(document).ready(function() {
-            // CSS'leri buraya tekrar ekledim ki tasarımı bozulmasın
-            $("body").css({ "background-color": "#0d0d0d", "color": "#ffffff", "font-family": "'Courier New', monospace", "display": "flex", "flex-direction": "column", "align-items": "center", "min-height": "100vh", "margin": "0", "padding": "20px" });
-            $("#panel-container").css({ "background-color": "#1a1a1a", "padding": "30px", "border-radius": "15px", "box-shadow": "0 0 25px #00ff00", "width": "100%", "max-width": "400px", "text-align": "center" });
-
-            // Buton Tıklamaları
-            $("#esp-buton").click(() => supabaseGuncelle("esp_aktif", $("#esp-buton").hasClass("pasif"), "ESP8266"));
-            $("#diafon-buton").click(() => supabaseGuncelle("kesici_aktif", $("#diafon-buton").hasClass("pasif"), "Diafon Kesici"));
-            $("#kapi-buton").click(() => supabaseGuncelle("kapi_aktif", $("#kapi-buton").hasClass("pasif"), "Otomatik Kapı"));
-            
-            // Realtime Güncellemeleri alırken de Telegram'a düşsün mü? 
-            // İstersen aşağıdaki satırla ESP'den gelen mesajları da Telegram'a yönlendirebilirsin:
-            supabaseClient.channel('diafon_kontrol_channel')
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'diafon_kontrol', filter: 'cihaz_id=eq.' + cihazId }, payload => {
-                if(payload.new.son_mesaj) {
-                    // Sadece ESP'den gelen mesajları Telegram'a at (Kendi buton basışlarını zaten üstte attık)
-                    if(payload.new.son_mesaj.includes("ESP")) return; 
-                    telegramGonder("📩 " + payload.new.son_mesaj);
-                }
-            }).subscribe();
-        });
-    </script>
+        // FCM
+        try {
+            const p = await Notification.requestPermission();
+            if(p === 'granted') {
+                const t = await firebase.messaging().getToken({ vapidKey: "BJcLJKf_jqJPoZxjSGFO4TjsxfDmk8Einp4e-XrruN2oIqKcMnBCmxqGuhHgRTPzItcog3eZDynrOu_76V0PqKI" });
+                $("#fcm-durum").text("✅ FCM Aktif");
+            }
+        } catch(e) { $("#fcm-durum").text("❌ FCM Hata"); }
+    });
+</script>
 </body>
 </html>
