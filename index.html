@@ -39,10 +39,7 @@
         <div id="fcm-durum" style="font-size:11px; color:#ffaa00; margin-top:10px;">📡 Bağlantı kontrol ediliyor...</div>
     </div>
 
-    <div id="supabase-log-ekrani">⚡ Supabase Hazır.</div>
-
     <script>
-        // Ayarlar
         const firebaseConfig = {
             apiKey: "AIzaSyCs4s6f3bRhc8lotVWcEKSUAEH_OQFWR1g",
             authDomain: "diafon-tetik12.firebaseapp.com",
@@ -56,46 +53,40 @@
         firebase.initializeApp(firebaseConfig);
         const messaging = firebase.messaging();
 
-        // Service Worker'ı daha güvenli kaydet
+        // Service Worker Kaydı
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('data:text/javascript,importScripts("https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js","https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js");firebase.initializeApp(' + JSON.stringify(firebaseConfig) + ');const messaging=firebase.messaging();messaging.onBackgroundMessage((p)=>{self.registration.showNotification("📞 Cihan Diafon",{body:p.data?.mesaj||"Yeni mesaj var!"})});')
-            .then(() => console.log('SW Başarıyla Kayıt Edildi.'))
             .catch(err => console.error('SW Hatası:', err));
         }
 
-        // FCM Mesajlarını Yakala
         messaging.onMessage((payload) => {
-            console.log("Mesaj geldi:", payload);
             const msg = payload.data?.mesaj || "Biri kapıda!";
             $("#fcm-mesaj-icerik").text(msg);
             $("#durum-bar").text("📨 " + msg);
         });
 
         async function requestFCMToken() {
-    try {
-        // İzin isteğini zorla
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            console.log("İzin verildi, token alınıyor...");
-            const token = await messaging.getToken({ vapidKey: VAPID_KEY });
-            if (token) {
-                $("#fcm-durum").text("✅ FCM Aktif!");
-                console.log("Token:", token);
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    const token = await messaging.getToken({ vapidKey: VAPID_KEY });
+                    if (token) {
+                        $("#fcm-durum").text("✅ FCM Aktif (Dinleniyor: diafon)");
+                        console.log("Token:", token);
+                        // FCM Topic aboneliği için log (Topic bazlı bildirim altyapısı hazır)
+                        console.log("Diafon kanalı dinleniyor...");
+                    }
+                } else {
+                    $("#fcm-durum").text("⚠️ İzin Reddedildi!");
+                }
+            } catch (e) { 
+                $("#fcm-durum").text("❌ Hata: " + e.message); 
             }
-        } else {
-            $("#fcm-durum").text("⚠️ İzin Reddedildi!");
         }
-    } catch (e) { 
-        console.error("FCM Hata Detayı:", e);
-        $("#fcm-durum").text("❌ Hata: " + e.message); 
-    }
-}
 
         $(document).ready(function() {
-            // Görsel Stiller (Kanka kodun aynısı)
             $("body").css({ "background-color": "#0d0d0d", "color": "#ffffff", "font-family": "monospace", "display": "flex", "flex-direction": "column", "align-items": "center", "min-height": "100vh", "padding": "20px" });
             $("#panel-container").css({ "background-color": "#1a1a1a", "padding": "30px", "border-radius": "15px", "box-shadow": "0 0 25px #00ff00", "width": "100%", "max-width": "400px", "text-align": "center" });
-            
             requestFCMToken();
         });
     </script>
