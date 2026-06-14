@@ -72,17 +72,24 @@
         });
 
         async function requestFCMToken() {
-            try {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    const token = await messaging.getToken({ vapidKey: VAPID_KEY });
-                    if (token) {
-                        $("#fcm-durum").text("✅ FCM Aktif (Token Alındı)");
-                        console.log("Token:", token);
-                    }
-                }
-            } catch (e) { $("#fcm-durum").text("❌ FCM İzin Hatası"); }
+    try {
+        // İzin isteğini zorla
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            console.log("İzin verildi, token alınıyor...");
+            const token = await messaging.getToken({ vapidKey: VAPID_KEY });
+            if (token) {
+                $("#fcm-durum").text("✅ FCM Aktif!");
+                console.log("Token:", token);
+            }
+        } else {
+            $("#fcm-durum").text("⚠️ İzin Reddedildi!");
         }
+    } catch (e) { 
+        console.error("FCM Hata Detayı:", e);
+        $("#fcm-durum").text("❌ Hata: " + e.message); 
+    }
+}
 
         $(document).ready(function() {
             // Görsel Stiller (Kanka kodun aynısı)
