@@ -55,9 +55,10 @@
 
         // Service Worker Kaydı
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('data:text/javascript,importScripts("https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js","https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js");firebase.initializeApp(' + JSON.stringify(firebaseConfig) + ');const messaging=firebase.messaging();messaging.onBackgroundMessage((p)=>{self.registration.showNotification("📞 Cihan Diafon",{body:p.data?.mesaj||"Yeni mesaj var!"})});')
-            .catch(err => console.error('SW Hatası:', err));
-        }
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then(() => console.log('SW Başarıyla Yüklendi.'))
+    .catch(err => console.error('SW Hatası:', err));
+}
 
         messaging.onMessage((payload) => {
             const msg = payload.data?.mesaj || "Biri kapıda!";
