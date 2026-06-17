@@ -5,147 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cihan Diafon Otomasyon Paneli</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background-color: #0d0d0d;
-            color: #ffffff;
-            font-family: 'Courier New', monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        #panel-container {
-            background-color: #1a1a1a;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 0 25px #00ff00;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-        h1 {
-            font-size: 22px;
-            color: #00ff00;
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-        }
-        .cizgi {
-            border-color: #00ff00;
-            margin: 20px 0;
-        }
-        .buton-satir {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 15px 0;
-            padding: 10px;
-            background: #0d0d0d;
-            border-radius: 10px;
-        }
-        .buton-etiket {
-            font-size: 14px;
-            font-weight: bold;
-            color: #00ff00;
-        }
-        button {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: monospace;
-            transition: all 0.3s ease;
-        }
-        button.aktif {
-            background-color: #00ff00;
-            color: #000000;
-            box-shadow: 0 0 10px #00ff00;
-        }
-        button.pasif {
-            background-color: #333333;
-            color: #ffffff;
-        }
-        button:hover {
-            transform: scale(1.02);
-            opacity: 0.9;
-        }
-        #fcm-mesaj-alani {
-            margin: 20px 0;
-        }
-        #fcm-mesaj-icerik {
-            background: #000000;
-            padding: 12px;
-            border-radius: 8px;
-            min-height: 50px;
-            border-left: 4px solid #00ff00;
-            text-align: left;
-            word-break: break-word;
-            font-size: 13px;
-        }
-        #durum-bar {
-            background: #0d0d0d;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            margin-top: 10px;
-            color: #00ff00;
-        }
-        #fcm-durum {
-            font-size: 11px;
-            color: #ffaa00;
-            margin-top: 10px;
-        }
-        .footer {
-            font-size: 10px;
-            margin-top: 15px;
-            color: #666;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #0d0d0d; color: #ffffff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+        #panel-container { background-color: #1a1a1a; padding: 30px; border-radius: 15px; box-shadow: 0 0 25px #00ff00; width: 100%; max-width: 400px; text-align: center; }
+        h1 { font-size: 20px; color: #00ff00; margin-bottom: 20px; }
+        .cizgi { border-color: #00ff00; margin: 20px 0; }
+        textarea { width: 100%; height: 60px; background: #000; color: #00ff00; border: 1px solid #00ff00; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-family: monospace; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button.aktif { background-color: #00ff00; color: #000; box-shadow: 0 0 10px #00ff00; }
+        #fcm-mesaj-icerik { background: #000; padding: 15px; border-radius: 8px; border-left: 4px solid #00ff00; text-align: left; font-size: 14px; min-height: 50px; word-break: break-word; }
+        #durum-bar, #fcm-durum { font-size: 11px; margin-top: 10px; color: #00ff00; }
     </style>
 </head>
 <body>
 
     <div id="panel-container">
-        <h1>⚡ CİHAN DIAFON KONTROL ⚡</h1>
-        <hr class="cizgi">
-
-        <div class="buton-satir">
-            <span class="buton-etiket">📡 ESP8266 Modülü</span>
-            <button id="esp-buton" class="pasif">KAPALI</button>
-        </div>
-        <div class="buton-satir">
-            <span class="buton-etiket">🔇 Diafon Sinyal Kesici</span>
-            <button id="diafon-buton" class="pasif">KAPALI</button>
-        </div>
-        <div class="buton-satir">
-            <span class="buton-etiket">🚪 Otomatik Kapı Açıcı</span>
-            <button id="kapi-buton" class="pasif">KAPALI</button>
-        </div>
+        <h1>⚡ CİHAN VERİ İSTASYONU ⚡</h1>
+        
+        <!-- MESAJ GÖNDERME -->
+        <textarea id="mesaj-text" placeholder="Gönderilecek veriyi yaz..."></textarea>
+        <button id="gonder-btn" class="aktif">FCM VERİ GÖNDER</button>
 
         <hr class="cizgi">
-        <div id="fcm-mesaj-alani">
-            <div style="font-size:12px; color:#00ff00; margin-bottom:5px;">📨 SON MESAJ:</div>
-            <div id="fcm-mesaj-icerik">🔔 Bekleniyor...</div>
-        </div>
 
-        <hr class="cizgi">
-        <div id="durum-bar">✅ Sistem hazır kanka.</div>
+        <!-- MESAJ ALMA -->
+        <div style="font-size:12px; color:#00ff00; margin-bottom:5px;">📨 GELEN VERİ (FCM):</div>
+        <div id="fcm-mesaj-icerik">🔔 Bekleniyor...</div>
+
+        <div id="durum-bar">✅ Sistem hazır.</div>
         <div id="fcm-durum">📡 Bağlantı kontrol ediliyor...</div>
-        <div class="footer">Cihan Diafon Sistemi v1.0</div>
     </div>
 
     <script>
-        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyCs4s6f3bRhc8lotVWcEKSUAEH_OQFWR1g",
             authDomain: "diafon-tetik12.firebaseapp.com",
@@ -154,143 +48,41 @@
             messagingSenderId: "534092717765",
             appId: "1:534092717765:web:695a90bde7071e207d1aac"
         };
-        const VAPID_KEY = "BJcLJKf_jqJPoZxjSGFO4TjsxfDmk8Einp4e-XrruN2oIqKcMnBCmxqGuhHgRTPzItcog3eZDynrOu_76V0PqKI";
-
-        // Firebase başlat
+        
         firebase.initializeApp(firebaseConfig);
         const messaging = firebase.messaging();
 
-        // Service Worker Kaydı - DÜZELTİLDİ (./ ile)
-        // Service Worker Kaydı (DÜZELTİLMİŞ VERSİYON)
-
-
-        // Ön planda mesaj gelince
+        // 1. VERİ ALMA (FCM mesajı gelince ekrana yaz)
         messaging.onMessage((payload) => {
-            console.log("📨 Ön plan mesajı:", payload);
-            const msg = payload.data?.mesaj || payload.notification?.body || "Biri kapıda!";
-            const title = payload.data?.baslik || payload.notification?.title || "Diafon Bildirimi";
-            
+            const msg = payload.data?.mesaj || "Veri geldi!";
             $("#fcm-mesaj-icerik").text(msg);
-            $("#durum-bar").text("📨 " + title + ": " + msg);
-            
-            // Eğer izin varsa bildirim göster
-            if (Notification.permission === 'granted') {
-                new Notification(title, { body: msg, icon: 'https://via.placeholder.com/64' });
-            }
+            $("#durum-bar").text("📨 Yeni veri alındı.");
         });
 
-        // FCM Token alma
-       async function requestFCMToken() {
-           try {
+        // 2. VERİ GÖNDERME (Butona basınca simüle et)
+        $("#gonder-btn").click(function() {
+            const val = $("#mesaj-text").val();
+            if(!val) return;
+            
+            // Burası "Gönderdiğin" yer
+            $("#fcm-mesaj-icerik").text(val);
+            $("#durum-bar").text("📤 Veri gönderildi.");
+            $("#mesaj-text").val("");
+            console.log("Payload:", { data: { mesaj: val } });
+        });
 
-    const permission = await Notification.requestPermission();
-
-    if (permission !== "granted") {
-
-        $("#fcm-durum").text("⚠️ Bildirim izni verilmedi.");
-
-        return;
-
-    }
-
-    $("#fcm-durum").text("📡 Service Worker yükleniyor...");
-
-    const registration = await navigator.serviceWorker.register(
-        "/diafon-panel/firebase-messaging-sw.js"
-    );
-
-    console.log("Service Worker:", registration.scope);
-
-    $("#fcm-durum").text("📡 FCM token alınıyor...");
-
-    const token = await messaging.getToken({
-        vapidKey: VAPID_KEY,
-        serviceWorkerRegistration: registration
-    });
-
-    if (token) {
-
-        console.log("FCM Token:", token);
-
-        $("#fcm-durum").html(
-            "✅ FCM Aktif!<br><small>" +
-            token.substring(0,30) +
-            "...</small>"
-        );
-
-        $("#durum-bar").text(
-            "✅ Bildirimler aktif, sistem hazır."
-        );
-
-    } else {
-
-        $("#fcm-durum").text(
-            "⚠️ Token alınamadı."
-        );
-
-    }
-
-} catch (e) {
-
-    console.error("FCM Hatası:", e);
-
-    $("#fcm-durum").text(
-        "❌ " + e.message
-    );
-
-    $("#durum-bar").text(
-        "❌ FCM bağlantı hatası!"
-    );
-
-}
-
-
-}
-
-        // Buton kontrol simülasyonu (Supabase ile entegre edilebilir)
-        function updateButtonStatus(buttonId, isActive) {
-            const btn = $(`#${buttonId}`);
-            if (isActive) {
-                btn.removeClass('pasif').addClass('aktif').text('AKTİF');
-            } else {
-                btn.removeClass('aktif').addClass('pasif').text('KAPALI');
-            }
+        // FCM Token (Sistem kurulumu)
+        async function initFCM() {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === "granted") {
+                    const token = await messaging.getToken({ vapidKey: "BJcLJKf_jqJPoZxjSGFO4TjsxfDmk8Einp4e-XrruN2oIqKcMnBCmxqGuhHgRTPzItcog3eZDynrOu_76V0PqKI" });
+                    $("#fcm-durum").text("✅ FCM Hazır.");
+                    console.log("Token:", token);
+                }
+            } catch(e) { $("#fcm-durum").text("❌ Hata: " + e.message); }
         }
-
-        // Buton click olayları (şimdilik simülasyon)
-        $(document).ready(function() {
-            // Buton state'leri
-            let espDurum = false;
-            let diafonDurum = false;
-            let kapiDurum = false;
-            
-            $("#esp-buton").click(function() {
-                espDurum = !espDurum;
-                updateButtonStatus("esp-buton", espDurum);
-                $("#durum-bar").text(espDurum ? "🔌 ESP8266 modülü aktif edildi." : "🔌 ESP8266 modülü kapatıldı.");
-                // Buraya Supabase update kodu gelecek
-            });
-            
-            $("#diafon-buton").click(function() {
-                diafonDurum = !diafonDurum;
-                updateButtonStatus("diafon-buton", diafonDurum);
-                $("#durum-bar").text(diafonDurum ? "🔇 Diafon sinyal kesici AKTİF" : "🔇 Diafon sinyal kesici KAPALI");
-            });
-            
-            $("#kapi-buton").click(function() {
-                kapiDurum = !kapiDurum;
-                updateButtonStatus("kapi-buton", kapiDurum);
-                $("#durum-bar").text(kapiDurum ? "🚪 Otomatik kapı açıcı AKTİF" : "🚪 Otomatik kapı açıcı KAPALI");
-            });
-            
-            // FCM token al
-            requestFCMToken();
-            
-            // 10 saniyede bir kontrol mesajı (debug için)
-            setInterval(() => {
-                console.log("🔍 Sistem çalışıyor... FCM durumu:", $("#fcm-durum").text());
-            }, 30000);
-        });
+        initFCM();
     </script>
 </body>
 </html>
