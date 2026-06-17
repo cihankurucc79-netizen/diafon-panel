@@ -9,20 +9,22 @@
     <style>
         body { background: #0d0d0d; color: #fff; font-family: monospace; display: flex; justify-content: center; padding: 20px; }
         #panel { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow: 0 0 15px #00ff00; text-align: center; }
-        textarea { width: 100%; height: 60px; background: #000; color: #0f0; border: 1px solid #0f0; margin-bottom: 10px; }
-        button { width: 100%; padding: 10px; background: #0f0; border: none; cursor: pointer; font-weight: bold; }
-        #ekran { background: #000; color: #0f0; padding: 15px; border-left: 4px solid #0f0; text-align: left; margin-top: 10px; }
+        textarea { width: 100%; height: 60px; background: #000; color: #0f0; border: 1px solid #0f0; margin-bottom: 10px; padding: 5px; }
+        button { width: 100%; padding: 10px; background: #0f0; border: none; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+        #fcm-mesaj-icerik { background: #000; color: #0f0; padding: 15px; border-left: 4px solid #0f0; text-align: left; min-height: 50px; }
+        #durum-bar { font-size: 11px; margin-top: 15px; color: #00ff00; }
     </style>
 </head>
 <body>
 
 <div id="panel">
     <h1>⚡ CİHAN VERİ İSTASYONU ⚡</h1>
-    <textarea id="mesaj-text" placeholder="Mesaj yaz..."></textarea>
+    <textarea id="mesaj-text" placeholder="Gönderilecek mesajı yaz..."></textarea>
     <button id="gonder-btn">FCM VERİ GÖNDER</button>
-    <div style="text-align:left; margin-top:15px;">📨 GELEN VERİ:</div>
-    <div id="ekran">🔔 Bekleniyor...</div>
-    <div id="durum" style="font-size:10px; margin-top:10px; color:#ffaa00;">📡 Bağlanıyor...</div>
+
+    <div style="text-align:left; font-size:12px; color:#00ff00; margin-bottom:5px;">📨 GELEN VERİ:</div>
+    <div id="fcm-mesaj-icerik">🔔 Bekleniyor...</div>
+    <div id="durum-bar">📡 Bağlantı kontrol ediliyor...</div>
 </div>
 
 <script>
@@ -36,88 +38,41 @@
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    // 1. SERVICE WORKER'I RAM ÜZERİNDE OLUŞTUR (Dosya oluşturmadan çalışma hilesi)
-    const swCode = `
-        importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
-        importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
-        firebase.initializeApp({apiKey: "AIzaSyCs4s6f3bRhc8lotVWcEKSUAEH_OQFWR1g", projectId: "diafon-tetik12", messagingSenderId: "534092717765", appId: "1:534092717765:web:695a90bde7071e207d1aac"});
-        const messaging = firebase.messaging();
-    `;
-    const blob = new Blob([swCode], { type: 'application/javascript' });
-    const swUrl = URL.createObjectURL(blob);
-
-    // 2. FCM BAĞLANTI
-    async function init() {
+    // 1. Service Worker Kaydı (Dosya yolu önemli!)
+    async function initFCM() {
         try {
-            const reg = await navigator.serviceWorker.register(swUrl);
-            const token = await messaging.getToken({ 
-                vapidKey: "BJcLJKf_jqJPoZxjSGFO4TjsxfDmk8Einp4e-XrruN2oIqKcMnBCmxqGuhHgRTPzItcog3eZDynrOu_76V0PqKI",
-                serviceWorkerRegistration: reg 
-            });
-            $("#durum").text("✅ FCM Aktif: " + token.substring(0,10) + "...");
-        } catch(e) { $("#durum").text("❌ Hata: " + e.message); }
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") {
+                // Buradaki dosya yolunu kendi GitHub yapına göre doğrula
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                const token = await messaging.getToken({ 
+                    vapidKey: "BJcLJKf_jqJPoZxjSGFO4TjsxfDmk8Einp4e-XrruN2oIqKcMnBCmxqGuhHgRTPzItcog3eZDynrOu_76V0PqKI",
+                    serviceWorkerRegistration: registration 
+                });
+                $("#durum-bar").text("✅ FCM Hazır: " + token.substring(0,10) + "...");
+            }
+        } catch(e) { 
+            $("#durum-bar").text("❌ Hata: " + e.message);
+        }
     }
 
-    messaging.onMessage((p) => $("#ekran").text(p.data.mesaj));
-
-    $("#gonder-btn").click(() => {
-        const m = $("#mesaj-text").val();
-        $("#ekran").text(m);
-        $("#durum").text("📤 Veri tetiklendi.");
+    // 2. Mesaj Geldiğinde
+    messaging.onMessage((payload) => {
+        const msg = payload.data?.mesaj || "Veri geldi!";
+        $("#fcm-mesaj-icerik").text(msg);
+        $("#durum-bar").text("📨 Yeni veri alındı.");
     });
 
-    init();
+    // 3. Mesaj Gönderdiğinde (Simülasyon)
+    $("#gonder-btn").click(function() {
+        const val = $("#mesaj-text").val();
+        if(!val) return;
+        $("#fcm-mesaj-icerik").text(val);
+        $("#durum-bar").text("📤 Veri gönderildi.");
+        $("#mesaj-text").val("");
+    });
+
+    initFCM();
 </script>
-</body>
-</html>
-        <div id="durum-bar">✅ Sistem hazır.</div>
-        <div id="fcm-durum">📡 Bağlantı kontrol ediliyor...</div>
-    </div>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCs4s6f3bRhc8lotVWcEKSUAEH_OQFWR1g",
-            authDomain: "diafon-tetik12.firebaseapp.com",
-            projectId: "diafon-tetik12",
-            storageBucket: "diafon-tetik12.firebasestorage.app",
-            messagingSenderId: "534092717765",
-            appId: "1:534092717765:web:695a90bde7071e207d1aac"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const messaging = firebase.messaging();
-
-        // 1. VERİ ALMA (FCM mesajı gelince ekrana yaz)
-        messaging.onMessage((payload) => {
-            const msg = payload.data?.mesaj || "Veri geldi!";
-            $("#fcm-mesaj-icerik").text(msg);
-            $("#durum-bar").text("📨 Yeni veri alındı.");
-        });
-
-        // 2. VERİ GÖNDERME (Butona basınca simüle et)
-        $("#gonder-btn").click(function() {
-            const val = $("#mesaj-text").val();
-            if(!val) return;
-            
-            // Burası "Gönderdiğin" yer
-            $("#fcm-mesaj-icerik").text(val);
-            $("#durum-bar").text("📤 Veri gönderildi.");
-            $("#mesaj-text").val("");
-            console.log("Payload:", { data: { mesaj: val } });
-        });
-
-        // FCM Token (Sistem kurulumu)
-        async function initFCM() {
-            try {
-                const permission = await Notification.requestPermission();
-                if (permission === "granted") {
-                    const token = await messaging.getToken({ vapidKey: "BJcLJKf_jqJPoZxjSGFO4TjsxfDmk8Einp4e-XrruN2oIqKcMnBCmxqGuhHgRTPzItcog3eZDynrOu_76V0PqKI" });
-                    $("#fcm-durum").text("✅ FCM Hazır.");
-                    console.log("Token:", token);
-                }
-            } catch(e) { $("#fcm-durum").text("❌ Hata: " + e.message); }
-        }
-        initFCM();
-    </script>
 </body>
 </html>
