@@ -5,53 +5,64 @@
     <title>Cihan Diafon Otomasyon Paneli</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    
     <style>
         body { background: #0d0d0d; color: #fff; font-family: monospace; display: flex; justify-content: center; padding: 20px; }
         #panel { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow: 0 0 15px #00ff00; text-align: center; }
         textarea { width: 100%; height: 60px; background: #000; color: #0f0; border: 1px solid #0f0; margin-bottom: 10px; padding: 5px; }
-        button { width: 100%; padding: 10px; background: #0f0; border: none; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
-        #fcm-mesaj-icerik { background: #000; color: #0f0; padding: 15px; border-left: 4px solid #0f0; text-align: left; min-height: 50px; }
-        #durum-bar { font-size: 11px; margin-top: 15px; color: #00ff00; }
+        button { width: 100%; padding: 15px; background: #0f0; border: none; cursor: pointer; font-weight: bold; font-size: 16px; margin-bottom: 20px; color: #000; }
+        #durum-bar { font-size: 12px; margin-top: 15px; color: #00ff00; border-top: 1px solid #333; padding-top: 10px; }
     </style>
 </head>
 <body>
 
 <div id="panel">
-    <h1>⚡ CİHAN VERİ İSTASYONU ⚡</h1>
-    <textarea id="mesaj-text" placeholder="Gönderilecek mesajı yaz..."></textarea>
-    <button id="gonder-btn">FCM VERİ GÖNDER</button>
+    <h1>⚡ CİHAN DİAFON ⚡</h1>
+    <textarea id="mesaj-text" placeholder="Not ekle (isteğe bağlı)..."></textarea>
+    <button id="gonder-btn">KAPIYI AÇ (MQTT)</button>
 
-    <div style="text-align:left; font-size:12px; color:#00ff00; margin-bottom:5px;">📨 GELEN VERİ:</div>
-    <div id="fcm-mesaj-icerik">🔔 Bekleniyor...</div>
     <div id="durum-bar">📡 Bağlantı kontrol ediliyor...</div>
 </div>
 
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <script>
-    // MQTT Bağlantısı (EMQX Broker)
+    // 1. Firebase Ayarları
+    const firebaseConfig = {
+        apiKey: "AIzaSyCs4s6f3bRhc8lotVWcEKSUAEH_OQFWR1g",
+        databaseURL: "https://diafon-tetik12-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "diafon-tetik12"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    // 2. MQTT Bağlantısı (EMQX Broker)
     const mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
-    // Web sayfasından Hem Firebase'e Hem MQTT'ye gönderen fonksiyon
+    mqttClient.on('connect', () => {
+        $("#durum-bar").text("✅ MQTT Bağlandı - Sistem Hazır");
+    });
+
+    // 3. Tetikleme Fonksiyonu
     function veriGonder(komut, veriIcerik) {
-        // 1. MQTT ile ESP'ye anlık komut gönder
+        // MQTT ile ESP'ye komut gönder
         mqttClient.publish('cihan/diafon/gizli_token_8899', komut);
         
-        // 2. Firebase'e kayıt at (Veritabanı güncellensin)
+        // Firebase'e log at
         firebase.database().ref('espler/esp_id1/Loglar').push({
-            mesaj: veriIcerik,
-            zaman: firebase.database.ServerValue.TIMESTAMP
+            komut: komut,
+            aciklama: veriIcerik || "Buton ile açıldı",
+            zaman: Date.now()
         });
         
-        $("#durum-bar").text("🚀 Gönderildi: " + komut);
+        $("#durum-bar").text("🚀 Komut gönderildi: " + komut);
     }
 
-    // Örnek kullanım: Kapı Aç butonu
+    // Buton Tetikleyici
     $("#gonder-btn").click(function() {
         const mesaj = $("#mesaj-text").val();
-        // MQTT üzerinden 'AC' komutu gönderiyoruz
         veriGonder('AC', mesaj); 
     });
 </script>
+
 </body>
 </html>
