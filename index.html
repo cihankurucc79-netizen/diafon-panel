@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Cihan Diafon Otomasyon Paneli</title>
+    <title>Cihan Diafon Paneli</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -11,57 +11,62 @@
     <style>
         body { background: #0d0d0d; color: #fff; font-family: monospace; display: flex; justify-content: center; padding: 20px; }
         #panel { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow: 0 0 15px #00ff00; text-align: center; }
-        textarea { width: 100%; height: 60px; background: #000; color: #0f0; border: 1px solid #0f0; margin-bottom: 10px; padding: 5px; }
-        button { width: 100%; padding: 15px; background: #0f0; border: none; cursor: pointer; font-weight: bold; font-size: 16px; margin-bottom: 20px; color: #000; }
-        #durum-bar { font-size: 12px; margin-top: 15px; color: #00ff00; border-top: 1px solid #333; padding-top: 10px; }
+        button { width: 100%; padding: 15px; margin: 5px 0; border: none; cursor: pointer; font-weight: bold; }
+        .btn-ac { background: #00ff00; color: #000; }
+        .btn-kapat { background: #ff0000; color: #fff; }
+        .btn-tetik { background: #ffff00; color: #000; }
+        #durum-bar { font-size: 12px; margin-top: 15px; color: #00ff00; }
     </style>
 </head>
 <body>
 
 <div id="panel">
     <h1>⚡ CİHAN DİAFON ⚡</h1>
-    <textarea id="mesaj-text" placeholder="Not ekle (isteğe bağlı)..."></textarea>
-    <button id="gonder-btn">KAPIYI AÇ (MQTT)</button>
+    
+    <button class="btn-ac" onclick="sistemKontrol('DURUM_ACIK')">SİSTEMİ AÇ</button>
+    <button class="btn-kapat" onclick="sistemKontrol('DURUM_KAPALI')">SİSTEMİ KAPAT</button>
+    <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+    <button class="btn-tetik" onclick="sistemKontrol('AC')">KAPIYI AÇ</button>
 
     <div id="durum-bar">📡 Bağlantı kontrol ediliyor...</div>
 </div>
 
 <script>
-    // 1. Firebase Ayarları
     const firebaseConfig = {
         apiKey: "AIzaSyCs4s6f3bRhc8lotVWcEKSUAEH_OQFWR1g",
         databaseURL: "https://diafon-tetik12-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "diafon-tetik12"
     };
     firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-    // 2. MQTT Bağlantısı (EMQX Broker)
     const mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
     mqttClient.on('connect', () => {
         $("#durum-bar").text("✅ MQTT Bağlandı - Sistem Hazır");
     });
 
-    // 3. Tetikleme Fonksiyonu
-    function veriGonder(komut, veriIcerik) {
-        // MQTT ile ESP'ye komut gönder
+    function sistemKontrol(komut) {
+        // 1. MQTT ile ESP'ye komutu anında uçur
         mqttClient.publish('cihan/diafon/gizli_token_8899', komut);
         
-        // Firebase'e log at
-        firebase.database().ref('espler/esp_id1/Loglar').push({
+        // 2. Eğer durum komutuysa Firebase'i de güncelle (ESP'nin açılışta hatırlaması için)
+        if(komut === 'DURUM_ACIK') {
+            database.ref('espler/esp_id1/Acik').set(true);
+            $("#durum-bar").text("🚀 Sistem AÇIK duruma getirildi.");
+        } else if(komut === 'DURUM_KAPALI') {
+            database.ref('espler/esp_id1/Acik').set(false);
+            $("#durum-bar").text("⚠️ Sistem KAPALI duruma getirildi.");
+        } else {
+            $("#durum-bar").text("🚀 Kapı Açıldı!");
+        }
+
+        // 3. Log tut
+        database.ref('espler/esp_id1/Loglar').push({
             komut: komut,
-            aciklama: veriIcerik || "Buton ile açıldı",
             zaman: Date.now()
         });
-        
-        $("#durum-bar").text("🚀 Komut gönderildi: " + komut);
     }
-
-    // Buton Tetikleyici
-    $("#gonder-btn").click(function() {
-        const mesaj = $("#mesaj-text").val();
-        veriGonder('AC', mesaj); 
-    });
 </script>
 
 </body>
